@@ -301,7 +301,7 @@ function renderPlan(id, qty, host){
       tr.appendChild(el("td","pnum",num(qty)+i18n(" шт")));
       tr.appendChild(el("td","pruns",num(runs)+"×"));
       tr.appendChild(el("td","ptime",fmtTime(rt)));
-      const fac=(r.fac||[]).map((f)=>ty(f).name)[0];
+      const fac=planFacName(r);
       tr.appendChild(el("td","pfac",fac?esc(fac):"—"));
       tr.appendChild(el("td","pfrom",esc(r.inp.map((i)=>num(i.q*runs)+" "+ty(i.id).name).join(", "))));
       tb.appendChild(tr);
@@ -327,7 +327,7 @@ function renderPlan(id, qty, host){
       tr.appendChild(ct);
       tr.appendChild(el("td","pruns",num(runs)+"×"));
       tr.appendChild(el("td","ptime",fmtTime((r.rt||0)*runs)));
-      tr.appendChild(el("td","pfac",(r.fac||[]).map((f)=>ty(f).name)[0]||"—"));
+      tr.appendChild(el("td","pfac",planFacName(r)||"—"));
       tb.appendChild(tr);
     });
     return el("thead",null,i18n("<tr><th>Из чего</th><th></th><th>Получаем</th><th class='ar'>Прогоны</th><th class='ar'>Время</th><th>Постройка</th></tr>"));

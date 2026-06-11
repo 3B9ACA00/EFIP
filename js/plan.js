@@ -10,6 +10,9 @@ const facChecks = {};                // fid -> есть ли постройка 
 const facOk = (r)=> !availFac || !(r.fac && r.fac.length) || r.fac.some((f)=>availFac.has(f));
 function recipeOre(r){ if(!(r.fac||[]).some((f)=>REFINERIES.has(f))) return null; const o=(r.inp||[]).find((i)=> ty(i.id).cat==="Asteroid"); return o?o.id:null; }  // руда-источник рефайна
 function refineSrc(r){ if(!(r.fac||[]).some((f)=>REFINERIES.has(f))) return null; return (r.inp&&r.inp[0]) ? r.inp[0].id : null; }   // главный вход рефайна (руда/лут/материал)
+// постройка для ОТОБРАЖЕНИЯ: предпочитаем Refinery (88063), если она среди построек рецепта; иначе первая (Field/Heavy-only или крафт)
+const planFac = (r)=>{ const fs=(r&&r.fac)||[]; return fs.includes(PREF_REFINERY) ? PREF_REFINERY : (fs.length?fs[0]:null); };
+const planFacName = (r)=>{ const f=planFac(r); return f!=null ? ty(f).name : null; };
 let _srcPref=null;   // источники (руда/лут), у которых ЕСТЬ рецепт на Refinery(88063)
 function srcHasPref(r){ if(!_srcPref){ _srcPref=new Set(); DATA.recipes.forEach((x)=>{ if((x.fac||[]).includes(PREF_REFINERY)){ const s=refineSrc(x); if(s!=null) _srcPref.add(s); } }); } const s=refineSrc(r); return s!=null && _srcPref.has(s); }
 let _oreReach=null;   // материалы, достижимые ИЗ РУДЫ (структурно, без учёта disable/лута) — кэш
@@ -27,8 +30,8 @@ function recipeOk(r){
   // (не подменяем добычу лут-шорткатом; «считаем только то, что копается»). Лут остаётся лишь для loot-only материалов.
   if((r.inp||[]).some((i)=>isLoot(i.id)) && (r.out||[]).every((o)=>oreReachable().has(o.id))) return false;
   const o=recipeOre(r); if(o!=null && oreDisabled.has(o)) return false;   // руда не выключена
-  const f=(r.fac||[]).find((x)=>REFINERIES.has(x));   // ВСЕГДА Refinery: не-88063 рефайн исключаем, если у источника есть рецепт на 88063 (иначе фолбэк — Field/Heavy)
-  if(f!=null && f!==PREF_REFINERY && srcHasPref(r)) return false;
+  const rf=(r.fac||[]).filter((x)=>REFINERIES.has(x));   // ВСЕГДА Refinery: рефайн-рецепт исключаем, ТОЛЬКО если он НЕ умеет в 88063 (Field/Heavy-only) И у источника есть рецепт на 88063. Рецепт с 88063 СРЕДИ построек — валиден (юзается в Refinery)
+  if(rf.length && !rf.includes(PREF_REFINERY) && srcHasPref(r)) return false;
   return true;
 }
 const _limitOverride = {};   // material id -> принудительный индекс рецепта (лимиты руды, режим custom)
@@ -335,8 +338,8 @@ function treeNode(n){
   head.appendChild(el("span","refnote", `  (${n.runs} ${runsWord(n.runs)}, ${fmtTime(n.rt)})`));
   const r = recipeFor(n.id);
   if(r && r.fac && r.fac.length){
-    const fc = el("span","tfac"); fc.appendChild(icon(r.fac[0],15));
-    fc.appendChild(document.createTextNode(" "+ty(r.fac[0]).name));
+    const pf=planFac(r); const fc = el("span","tfac"); fc.appendChild(icon(pf,15));
+    fc.appendChild(document.createTextNode(" "+ty(pf).name));
     head.appendChild(fc);
   }
   s.appendChild(head); d.appendChild(s);
@@ -347,7 +350,7 @@ function treeNode(n){
     const sel = el("div","treepaths");
     alts.forEach((rr,i)=>{
       const b = el("button","tpath"+(i===cur?" on":"")+(i===best?" best":""));
-      const fac = (rr.fac||[]).map((f)=>ty(f).name)[0] || "—";
+      const fac = planFacName(rr) || "—";
       const uc = recipeUnitCost(rr, n.id);
       b.innerHTML = `${esc(fac)} <span class="v">${num(uc.ore)}${i18n("м³")}${uc.loot>0?i18n('+лут'):''}</span>` + (i===best?` ✓`:``);
       b.title = `${rr.inp.map((x)=>x.q+" "+ty(x.id).name).join(" + ")}  →  ${outQty(rr,n.id)} ${ty(n.id).name}`;
