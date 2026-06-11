@@ -442,6 +442,7 @@ button.mini2{padding:3px 10px;font-size:11px;font-weight:500}
 .oretbl thead th.ar{min-width:100px}
 .orestock{color:#7ed87e;font-family:monospace;font-weight:600;font-size:13px;text-align:right;white-space:nowrap}
 .orest.alt{color:#8f8a76;font-weight:400;font-style:italic;font-size:12px}
+.orest.cov{color:#7ed87e;font-weight:600;font-style:normal;font-size:12px}   /* не копается, но покрыто складом */
 @keyframes noaltflash{0%{background:rgba(255,90,90,.45)}100%{background:transparent}}
 .orerow.noalt{animation:noaltflash .9s ease-out}
 .oretgbig{width:19px;height:19px;cursor:pointer;accent-color:var(--accent);margin:0}

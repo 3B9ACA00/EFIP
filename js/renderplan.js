@@ -84,7 +84,8 @@ function renderPlan(id, qty, host){
       const tb=el("tbody");
       oreList.forEach((oid,idx)=>{
         const off=oreDisabled.has(oid), used=(oreR[oid]||0)>0, isReq=reqOff.has(oid)||overLimit.has(oid);
-        const tr=el("tr","orerow"+(off?" off":"")+(isReq?" req":"")+(used?" used":" alt")); tr.dataset.ore=oid;
+        const covered=!used && (demand[oid]||0)>0 && stockQty(oid)>0;   // не копается, но РАСХОДУЕТСЯ со склада (не «альт»!)
+        const tr=el("tr","orerow"+(off?" off":"")+(isReq?" req":"")+(used?" used":(covered?" cov":" alt"))); tr.dataset.ore=oid;
         if(cust && !off){ tr.draggable=true;
           tr.addEventListener("dragstart",(e)=>{ e.dataTransfer.setData("text/plain",String(oid)); e.dataTransfer.effectAllowed="move"; tr.classList.add("dragging"); });
           tr.addEventListener("dragend",()=>tr.classList.remove("dragging"));
@@ -102,7 +103,7 @@ function renderPlan(id, qty, host){
         tr.appendChild(el("td","orerank2", String(idx+1)));
         const ci=el("td","oreic"); ci.style.cursor="pointer"; ci.onclick=()=>showDetail(oid); ci.appendChild(icon(oid,34)); tr.appendChild(ci);
         const nm=el("td","orenm2", esc(ty(oid).name)); nm.style.cursor="pointer"; nm.onclick=()=>showDetail(oid); tr.appendChild(nm);
-        tr.appendChild(el("td","orest"+(used?"":" alt"), used?num(oreR[oid])+"×":i18n("альт")));
+        tr.appendChild(el("td","orest"+(used?"":(covered?" cov":" alt")), used?num(oreR[oid])+"×":i18n(covered?"со склада":"альт")));
         if(hasStockCol){ const se=curStock()[oid], sq=stockQty(oid); tr.appendChild(el("td","orestock"+((se&&se.inf)?" infv":""), (se&&se.inf)?"∞":(sq>0?"+"+num(sq):""))); }
         if(cust){
           const ltd=el("td","orelim");
@@ -154,7 +155,7 @@ function renderPlan(id, qty, host){
     const nFilled=filledIds.length;
     const det=el("details","gsec stock");
     det.open = (_stockOpen!=null) ? _stockOpen : (nFilled>0);
-    det.addEventListener("toggle", ()=>{ _stockOpen=det.open; });
+    det.addEventListener("toggle", ()=>{ if(det.open!==_stockOpen){ _stockOpen=det.open; saveOrePrefs(); } });   // персист открыт/свёрнут (guard от программных ре-рендеров)
     const sum=el("summary","stocksum");
     sum.appendChild(el("span","stockttl","0 · "+i18n("Склад")));
     sum.appendChild(el("span","stocksub", nFilled?i18n("{n} заполнено",{n:nFilled}):i18n("впиши, что уже есть")));
@@ -180,6 +181,7 @@ function renderPlan(id, qty, host){
     const setGrp=(g)=>{ _stockView.group=g; saveOrePrefs(); recompute(); };
     grp.appendChild(iconMenu("▦", i18n("Группировка"), [
       {label:i18n("По типам"), active:_stockView.group==="type", act:()=>setGrp("type")},
+      {label:i18n("По уровню (этапы)"), active:_stockView.group==="level", act:()=>setGrp("level")},
       {label:i18n("По категории"), active:_stockView.group==="cat", act:()=>setGrp("cat")},
       {label:i18n("Заполнено / пусто"), active:_stockView.group==="filled", act:()=>setGrp("filled")},
       {label:i18n("Без группировки"), active:_stockView.group==="none", act:()=>setGrp("none")},
@@ -212,12 +214,15 @@ function renderPlan(id, qty, host){
       return (ka-kb)*v.dir || nm; };
     let _zi=0;
     const addRows=(arr)=> arr.forEach((it)=>{ const r=srow(it); if(_zi++%2) r.classList.add("zeb"); tb.appendChild(r); });
-    // блок группы: кликабельный заголовок (свернуть/развернуть) + счётчик + каретка; ключи свёртки tN/c:cat/fN
+    // глубина переработки (этапы от сырья): руда/лут=0, рефайн из руды=1, крафт=2… max по recipeOk-рецептам; локальный мемо + cycle-гард
+    const _dm={};
+    const itemDepth=(it)=>{ if(it in _dm) return _dm[it]; if(!isCraftable(it)) return _dm[it]=0; _dm[it]=0; let mx=0; (byOut[it]||[]).forEach((r)=>{ if(!recipeOk(r)) return; (r.inp||[]).forEach((i)=>{ const di=itemDepth(i.id); if(di>mx) mx=di; }); }); return _dm[it]=mx+1; };
+    // блок группы: кликабельный заголовок (свернуть/развернуть) + счётчик + каретка; lbl УЖЕ переведён; ключи свёртки tN/lN/c:cat/fN
     const grpBlock=(key, lbl, items)=>{
       const col=_stockCollapsed.has(key);
       const gtr=el("tr","stockgrp"+(col?" col":"")); const gtd=el("td","sgrp"); gtd.colSpan=5;
       gtd.appendChild(el("span","gcar", col?"▸":"▾"));
-      gtd.appendChild(el("span","glbl", i18n(lbl)+" ("+items.length+")"));
+      gtd.appendChild(el("span","glbl", lbl+" ("+items.length+")"));
       gtr.appendChild(gtd);
       gtr.onclick=()=>{ if(col) _stockCollapsed.delete(key); else _stockCollapsed.add(key); recompute(); };
       tb.appendChild(gtr);
@@ -227,18 +232,23 @@ function renderPlan(id, qty, host){
     if(gm==="type"){
       [[2,"Крафт"],[1,"Рефайн"],[0,"Руда"]].forEach(([g,lbl])=>{   // обратный порядок: готовые материалы сверху, руда внизу
         const items=res.filter((it)=>grpOf(it)===g).sort(stockCmp);
-        if(items.length) grpBlock("t"+g, lbl, items);
+        if(items.length) grpBlock("t"+g, i18n(lbl), items);
+      });
+    } else if(gm==="level"){   // по глубине переработки — больше этапов (готовые «кирпичи») сверху, сырьё внизу
+      [...new Set(res.map(itemDepth))].sort((a,b)=>b-a).forEach((dp)=>{
+        const items=res.filter((it)=>itemDepth(it)===dp).sort(stockCmp);
+        if(items.length) grpBlock("l"+dp, i18n("Уровень {n}",{n:dp}), items);
       });
     } else if(gm==="cat"){   // по SDE-категории (Asteroid/Material/Commodity…), порядок как в сайдбаре
       [...new Set(res.map((it)=>ty(it).cat))].sort((a,b)=>CAT_ORDER.indexOf(a)-CAT_ORDER.indexOf(b)).forEach((c)=>{
         const items=res.filter((it)=>ty(it).cat===c).sort(stockCmp);
-        if(items.length) grpBlock("c:"+c, c, items);
+        if(items.length) grpBlock("c:"+c, i18n(c), items);
       });
     } else if(gm==="filled"){
       const isF=(it)=>{ const e=sk[it]; return !!(e&&(e.qty>0||e.inf)); };
       [["Заполнено",true],["Пусто",false]].forEach(([lbl,f])=>{
         const items=res.filter((it)=>isF(it)===f).sort(stockCmp);
-        if(items.length) grpBlock("f"+(f?1:0), lbl, items);
+        if(items.length) grpBlock("f"+(f?1:0), i18n(lbl), items);
       });
     } else { addRows(res.slice().sort(stockCmp)); }   // none — плоский список
     det.appendChild(tbl);

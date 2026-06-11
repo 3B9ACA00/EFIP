@@ -43,7 +43,7 @@ let _stockRoot = null;    // корень текущего плана (для cu
 let _stockSort = { col:"ord", dir:1 };   // сортировка склада: ord(по умолч.)/name/comment/qty
 let _stockOpen = null;   // развёрнут ли блок Склад (<details>); null = по умолчанию (открыт если есть заполненные)
 let _stockView = { by:"need", dir:-1, group:"type" };   // вид склада: сорт need/name/have + dir(-1 убыв.) + группировка type/cat/filled/none
-let _stockCollapsed = new Set();   // свёрнутые группы склада (ключи tN / c:cat / fN); session-only
+let _stockCollapsed = new Set();   // свёрнутые группы склада (ключи tN / lN / c:cat / fN); персист в ef_stock_collapsed
 try{
   orePriority = JSON.parse(localStorage.getItem("ef_orePrio")||"[]")||[];
   (JSON.parse(localStorage.getItem("ef_oreOff")||"[]")||[]).forEach((x)=>oreDisabled.add(x));
@@ -56,6 +56,8 @@ try{
   _mig(stock); for(const r in stockLocal) _mig(stockLocal[r]);
   Object.assign(_stockView, JSON.parse(localStorage.getItem("ef_stockview")||"{}")||{});
   if(_stockView.group===true) _stockView.group="type"; else if(_stockView.group===false) _stockView.group="none";   // миграция boolean→строка
+  const _so=localStorage.getItem("ef_stockopen"); if(_so!==null) _stockOpen=JSON.parse(_so);   // свёрнут ли весь блок
+  (JSON.parse(localStorage.getItem("ef_stock_collapsed")||"[]")||[]).forEach((k)=>_stockCollapsed.add(k));   // свёрнутые группы
 }catch(e){}
 function saveOrePrefs(){ try{
   localStorage.setItem("ef_orePrio", JSON.stringify(orePriority));
@@ -66,6 +68,8 @@ function saveOrePrefs(){ try{
   localStorage.setItem("ef_stock_local", JSON.stringify(stockLocal));
   localStorage.setItem("ef_stock_localon", JSON.stringify([...stockLocalOn]));
   localStorage.setItem("ef_stockview", JSON.stringify(_stockView));
+  localStorage.setItem("ef_stockopen", JSON.stringify(_stockOpen));
+  localStorage.setItem("ef_stock_collapsed", JSON.stringify([..._stockCollapsed]));
 }catch(e){} }
 // активный склад: общий (stock) или локальный для корня плана (если включён локальный режим)
 function curStock(){ const r=(_stockRoot!=null)?_stockRoot:selected; return stockLocalOn.has(r) ? (stockLocal[r]||(stockLocal[r]={})) : stock; }
@@ -173,7 +177,7 @@ const EN = {
   "локальный":"local","Отдельный склад только для этого предмета (иначе — общий для всех)":"Separate stock for this item only (otherwise shared)","Изменить количество":"Edit quantity","Бесконечно (не добывать)":"Infinite (don't mine/loot)","Снять «бесконечно»":"Remove infinite",
   "Произвести":"Produce","шт":"pcs","Да":"Yes","Отмена":"Cancel","Очистить весь склад?":"Clear all stock?","Убрать «{name}» из склада?":"Remove «{name}» from stock?",
   "Сортировка":"Sort","по «нужно»":"by need","по имени":"by name","по стоку":"by stock","Группы":"Groups","По убыванию":"Descending","По возрастанию":"Ascending","Группировка по типам — клик: плоский список":"Grouped by type — click for flat list","Плоский список — клик: группировать по типам":"Flat list — click to group by type",
-  "Группировка":"Grouping","Нужно ↓":"Need ↓","Нужно ↑":"Need ↑","Имя А–Я":"Name A–Z","Имя Я–А":"Name Z–A","Сток ↓":"Stock ↓","Сток ↑":"Stock ↑","По типам":"By type","По категории":"By category","Без группировки":"No grouping","Заполнено / пусто":"Filled / empty","Заполнено":"Filled","Пусто":"Empty",
+  "Группировка":"Grouping","Нужно ↓":"Need ↓","Нужно ↑":"Need ↑","Имя А–Я":"Name A–Z","Имя Я–А":"Name Z–A","Сток ↓":"Stock ↓","Сток ↑":"Stock ↑","По типам":"By type","По категории":"By category","Без группировки":"No grouping","Заполнено / пусто":"Filled / empty","Заполнено":"Filled","Пусто":"Empty","со склада":"from stock","По уровню (этапы)":"By level (stages)","Уровень {n}":"Level {n}",
   "тащи строку или ▲▼ = приоритет · ☑ вкл/выкл":"drag row or ▲▼ = priority · ☑ on/off","порядок — авто по пресету":"order auto by preset","⟲ Сбросить лимиты":"⟲ Reset limits","Сбросить лимит":"Clear limit",
   "Руда":"Ore","Нужно":"Need","вкл":"on","Лимит":"Limit",
   "Минимум объёма руды на хаул — макс. выход материала на m³.":"Least ore volume to haul — max material per m³.","Минимум суммарного времени переработки.":"Least total refining time.",
