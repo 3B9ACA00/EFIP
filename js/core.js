@@ -42,6 +42,8 @@ const stockLocalOn = new Set();   // rootId, у которых включён Л
 let _stockRoot = null;    // корень текущего плана (для curStock в локальном режиме)
 let _stockSort = { col:"ord", dir:1 };   // сортировка склада: ord(по умолч.)/name/comment/qty
 let _stockOpen = null;   // развёрнут ли блок Склад (<details>); null = по умолчанию (открыт если есть заполненные)
+let _stockView = { by:"need", dir:-1, group:"type" };   // вид склада: сорт need/name/have + dir(-1 убыв.) + группировка type/cat/filled/none
+let _stockCollapsed = new Set();   // свёрнутые группы склада (ключи tN / c:cat / fN); session-only
 try{
   orePriority = JSON.parse(localStorage.getItem("ef_orePrio")||"[]")||[];
   (JSON.parse(localStorage.getItem("ef_oreOff")||"[]")||[]).forEach((x)=>oreDisabled.add(x));
@@ -52,6 +54,8 @@ try{
   (JSON.parse(localStorage.getItem("ef_stock_localon")||"[]")||[]).forEach((x)=>stockLocalOn.add(+x));
   const _mig=(s)=>{ let o=0; for(const k in s){ const v=s[k]; if(typeof v!=="object"||!v) s[k]={qty:+v||0,comment:"",off:false}; if(s[k].ord==null) s[k].ord=++o; } };
   _mig(stock); for(const r in stockLocal) _mig(stockLocal[r]);
+  Object.assign(_stockView, JSON.parse(localStorage.getItem("ef_stockview")||"{}")||{});
+  if(_stockView.group===true) _stockView.group="type"; else if(_stockView.group===false) _stockView.group="none";   // миграция boolean→строка
 }catch(e){}
 function saveOrePrefs(){ try{
   localStorage.setItem("ef_orePrio", JSON.stringify(orePriority));
@@ -61,6 +65,7 @@ function saveOrePrefs(){ try{
   localStorage.setItem("ef_stock", JSON.stringify(stock));
   localStorage.setItem("ef_stock_local", JSON.stringify(stockLocal));
   localStorage.setItem("ef_stock_localon", JSON.stringify([...stockLocalOn]));
+  localStorage.setItem("ef_stockview", JSON.stringify(_stockView));
 }catch(e){} }
 // активный склад: общий (stock) или локальный для корня плана (если включён локальный режим)
 function curStock(){ const r=(_stockRoot!=null)?_stockRoot:selected; return stockLocalOn.has(r) ? (stockLocal[r]||(stockLocal[r]={})) : stock; }
@@ -167,6 +172,8 @@ const EN = {
   "Заметка":"Note","заметка":"note","{n} заполнено":"{n} filled","впиши, что уже есть":"enter what you have","Выключить весь склад":"Disable all stock","Включить весь склад":"Enable all stock","Кликни — вписать количество":"Click to enter quantity","Кликни — заметка":"Click to add a note",
   "локальный":"local","Отдельный склад только для этого предмета (иначе — общий для всех)":"Separate stock for this item only (otherwise shared)","Изменить количество":"Edit quantity","Бесконечно (не добывать)":"Infinite (don't mine/loot)","Снять «бесконечно»":"Remove infinite",
   "Произвести":"Produce","шт":"pcs","Да":"Yes","Отмена":"Cancel","Очистить весь склад?":"Clear all stock?","Убрать «{name}» из склада?":"Remove «{name}» from stock?",
+  "Сортировка":"Sort","по «нужно»":"by need","по имени":"by name","по стоку":"by stock","Группы":"Groups","По убыванию":"Descending","По возрастанию":"Ascending","Группировка по типам — клик: плоский список":"Grouped by type — click for flat list","Плоский список — клик: группировать по типам":"Flat list — click to group by type",
+  "Группировка":"Grouping","Нужно ↓":"Need ↓","Нужно ↑":"Need ↑","Имя А–Я":"Name A–Z","Имя Я–А":"Name Z–A","Сток ↓":"Stock ↓","Сток ↑":"Stock ↑","По типам":"By type","По категории":"By category","Без группировки":"No grouping","Заполнено / пусто":"Filled / empty","Заполнено":"Filled","Пусто":"Empty",
   "тащи строку или ▲▼ = приоритет · ☑ вкл/выкл":"drag row or ▲▼ = priority · ☑ on/off","порядок — авто по пресету":"order auto by preset","⟲ Сбросить лимиты":"⟲ Reset limits","Сбросить лимит":"Clear limit",
   "Руда":"Ore","Нужно":"Need","вкл":"on","Лимит":"Limit",
   "Минимум объёма руды на хаул — макс. выход материала на m³.":"Least ore volume to haul — max material per m³.","Минимум суммарного времени переработки.":"Least total refining time.",

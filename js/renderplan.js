@@ -7,7 +7,7 @@ function renderPlan(id, qty, host){
   _lastPlan = { id, qty, host };
   for(const k in _limitOverride) delete _limitOverride[k];
   if(oreMode==="custom") applyOreLimits(id, qty);      // custom: ручные лимиты руды → _limitOverride (LP-выбор для volume/time делает сам plan())
-  const { tree, raw, steps, byprod, totalTime, items } = plan(id, qty);
+  const { tree, raw, steps, byprod, totalTime, items, demand } = plan(id, qty);
   host.innerHTML = "";
 
   // ── листья: руда / лут / заблокировано (нет постройки) ──
@@ -159,7 +159,32 @@ function renderPlan(id, qty, host){
     sum.appendChild(el("span","stockttl","0 · "+i18n("Склад")));
     sum.appendChild(el("span","stocksub", nFilled?i18n("{n} заполнено",{n:nFilled}):i18n("впиши, что уже есть")));
     const grp=el("div","stockbtns");
-    // единый стиль 3 кнопок; глазик+Очистить ВСЕГДА видны (неактивны при пустом складе)
+    // выпадающее меню-иконка (sort/group) в один ряд с кнопками; opts=[{label,active,act}]
+    const iconMenu=(icon, title, opts)=>{
+      const pk=el("div","picker imenu"); const btn=el("button","sec-btn mini2 stbtn imbtn"); btn.innerHTML=icon+"<span class='imcar'>▾</span>"; btn.title=title;
+      const menu=el("div","pickmenu");
+      opts.forEach((o)=>{ const it=el("div","pickopt"+(o.active?" act":"")); it.textContent=o.label; it.onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); o.act(); }; menu.appendChild(it); });
+      btn.onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); const op=menu.classList.contains("open"); document.querySelectorAll(".pickmenu.open").forEach((m)=>m.classList.remove("open")); if(!op) menu.classList.add("open"); };
+      pk.appendChild(btn); pk.appendChild(menu); return pk;
+    };
+    if(!window._imClose){ window._imClose=true; document.addEventListener("click",(e)=>{ if(!e.target.closest(".imenu")) document.querySelectorAll(".pickmenu.open").forEach((m)=>m.classList.remove("open")); }); }
+    const setSort=(by,dir)=>{ _stockView.by=by; _stockView.dir=dir; saveOrePrefs(); recompute(); };
+    grp.appendChild(iconMenu("⇅", i18n("Сортировка"), [
+      {label:i18n("Нужно ↓"), active:_stockView.by==="need"&&_stockView.dir<0, act:()=>setSort("need",-1)},
+      {label:i18n("Нужно ↑"), active:_stockView.by==="need"&&_stockView.dir>0, act:()=>setSort("need",1)},
+      {label:i18n("Имя А–Я"), active:_stockView.by==="name"&&_stockView.dir>0, act:()=>setSort("name",1)},
+      {label:i18n("Имя Я–А"), active:_stockView.by==="name"&&_stockView.dir<0, act:()=>setSort("name",-1)},
+      {label:i18n("Сток ↓"), active:_stockView.by==="have"&&_stockView.dir<0, act:()=>setSort("have",-1)},
+      {label:i18n("Сток ↑"), active:_stockView.by==="have"&&_stockView.dir>0, act:()=>setSort("have",1)},
+    ]));
+    const setGrp=(g)=>{ _stockView.group=g; saveOrePrefs(); recompute(); };
+    grp.appendChild(iconMenu("▦", i18n("Группировка"), [
+      {label:i18n("По типам"), active:_stockView.group==="type", act:()=>setGrp("type")},
+      {label:i18n("По категории"), active:_stockView.group==="cat", act:()=>setGrp("cat")},
+      {label:i18n("Заполнено / пусто"), active:_stockView.group==="filled", act:()=>setGrp("filled")},
+      {label:i18n("Без группировки"), active:_stockView.group==="none", act:()=>setGrp("none")},
+    ]));
+    // единый стиль; глазик+Очистить ВСЕГДА видны (неактивны при пустом складе)
     const local=stockLocalOn.has(id);
     const lb=el("button","sec-btn mini2 stbtn"+(local?" on":""), (local?"☑ ":"☐ ")+i18n("локальный"));
     lb.title=i18n("Отдельный склад только для этого предмета (иначе — общий для всех)");
@@ -179,13 +204,43 @@ function renderPlan(id, qty, host){
     const thr=el("tr"); ["", i18n("Ресурс"), i18n("Заметка"), i18n("Кол-во"), i18n("Действия")].forEach((hh,ci)=> thr.appendChild(el("th",(ci===3?"ar":""), hh)));
     const thd=el("thead"); thd.appendChild(thr); tbl.appendChild(thd);
     const tb=el("tbody"); tbl.appendChild(tb);
+    // сортировка: need=demand / name / have=ВВЕДЁННОЕ кол-во (НЕ stockQty: тот даёт 0 для off → глазик «выкл всё» менял бы порядок); dir −1=убыв.; tie→имя
+    const hv=(it)=>{ const e=sk[it]; return e?(e.inf?1e15:(+e.qty||0)):0; };
+    const stockCmp=(a,b)=>{ const v=_stockView, nm=ty(a).name.localeCompare(ty(b).name);
+      if(v.by==="name") return nm*v.dir;
+      const ka=v.by==="have"?hv(a):(demand[a]||0), kb=v.by==="have"?hv(b):(demand[b]||0);
+      return (ka-kb)*v.dir || nm; };
     let _zi=0;
-    [[0,"Руда"],[1,"Рефайн"],[2,"Крафт"]].forEach(([g,lbl])=>{
-      const items=res.filter((it)=>grpOf(it)===g).sort((a,b)=>ty(a).name.localeCompare(ty(b).name));
-      if(!items.length) return;
-      const gtr=el("tr","stockgrp"); const gtd=el("td","sgrp"); gtd.colSpan=5; gtd.textContent=i18n(lbl); gtr.appendChild(gtd); tb.appendChild(gtr);
-      items.forEach((it)=>{ const r=srow(it); if(_zi++%2) r.classList.add("zeb"); tb.appendChild(r); });
-    });
+    const addRows=(arr)=> arr.forEach((it)=>{ const r=srow(it); if(_zi++%2) r.classList.add("zeb"); tb.appendChild(r); });
+    // блок группы: кликабельный заголовок (свернуть/развернуть) + счётчик + каретка; ключи свёртки tN/c:cat/fN
+    const grpBlock=(key, lbl, items)=>{
+      const col=_stockCollapsed.has(key);
+      const gtr=el("tr","stockgrp"+(col?" col":"")); const gtd=el("td","sgrp"); gtd.colSpan=5;
+      gtd.appendChild(el("span","gcar", col?"▸":"▾"));
+      gtd.appendChild(el("span","glbl", i18n(lbl)+" ("+items.length+")"));
+      gtr.appendChild(gtd);
+      gtr.onclick=()=>{ if(col) _stockCollapsed.delete(key); else _stockCollapsed.add(key); recompute(); };
+      tb.appendChild(gtr);
+      if(!col) addRows(items);
+    };
+    const gm=_stockView.group;
+    if(gm==="type"){
+      [[2,"Крафт"],[1,"Рефайн"],[0,"Руда"]].forEach(([g,lbl])=>{   // обратный порядок: готовые материалы сверху, руда внизу
+        const items=res.filter((it)=>grpOf(it)===g).sort(stockCmp);
+        if(items.length) grpBlock("t"+g, lbl, items);
+      });
+    } else if(gm==="cat"){   // по SDE-категории (Asteroid/Material/Commodity…), порядок как в сайдбаре
+      [...new Set(res.map((it)=>ty(it).cat))].sort((a,b)=>CAT_ORDER.indexOf(a)-CAT_ORDER.indexOf(b)).forEach((c)=>{
+        const items=res.filter((it)=>ty(it).cat===c).sort(stockCmp);
+        if(items.length) grpBlock("c:"+c, c, items);
+      });
+    } else if(gm==="filled"){
+      const isF=(it)=>{ const e=sk[it]; return !!(e&&(e.qty>0||e.inf)); };
+      [["Заполнено",true],["Пусто",false]].forEach(([lbl,f])=>{
+        const items=res.filter((it)=>isF(it)===f).sort(stockCmp);
+        if(items.length) grpBlock("f"+(f?1:0), lbl, items);
+      });
+    } else { addRows(res.slice().sort(stockCmp)); }   // none — плоский список
     det.appendChild(tbl);
     guide.appendChild(det);
 
