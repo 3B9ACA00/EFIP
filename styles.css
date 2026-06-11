@@ -491,6 +491,43 @@ button.mini2{padding:3px 10px;font-size:11px;font-weight:500}
 .ssel{min-width:210px}
 .stocknote{margin-top:8px}
 .stockbar{display:flex;gap:8px;margin-top:10px}
+/* склад-грид v123: все ресурсы списком, inline-правка, фикс-ширина, сворачивание */
+details.stock{padding:0;max-width:676px}
+.stocktbl.fixed{table-layout:fixed;width:676px;max-width:100%;margin-top:6px}
+.strow.zeb{background:rgba(255,255,255,.022)}
+.strow:hover,.strow.zeb:hover{background:rgba(255,122,60,.1)}
+.stockmode{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#8f8a76;cursor:pointer;user-select:none;white-space:nowrap}
+.stockmode input{cursor:pointer;margin:0}
+.sxb.inf{font-size:16px;font-weight:700;line-height:1}
+.sxb.inf.on{color:var(--accent);border-color:var(--accent)}
+.stocktbl .sact{text-align:left;padding-left:10px}
+.stocktbl .sact .sxb{min-width:26px;height:24px;padding:0 4px;margin:0 4px 0 0;vertical-align:middle}
+.stockbtns{display:flex;align-items:center;gap:6px}
+.stbtn{display:inline-flex;align-items:center;justify-content:center;height:26px;gap:5px}
+.stbtn svg{display:block;width:15px;height:15px}
+.stbtn.on{background:rgba(255,122,60,.18);border-color:var(--accent);color:var(--accent)}
+.stbtn.eyebtn.dim svg{opacity:.5}
+.sec-btn:disabled{opacity:.4;cursor:default;pointer-events:none}
+.sqty.infv{font-size:24px;color:var(--accent);line-height:1;font-weight:400}
+.sqty.muted{color:#5e594c;font-weight:400}
+.orestock.infv{font-size:17px;color:#7ed87e}
+.sinline[type=number]{-moz-appearance:textfield}
+.sinline::-webkit-outer-spin-button,.sinline::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.stocksum{display:flex;align-items:center;gap:12px;cursor:pointer;padding:6px 2px;list-style:none}
+.stocksum::-webkit-details-marker{display:none}
+.stocksum::before{content:"▸";color:var(--accent);font-size:11px;transition:transform .15s}
+details.stock[open] .stocksum::before{transform:rotate(90deg)}
+.stockttl{color:var(--accent);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.stocksub{color:#8f8a76;font-size:12px;flex:1}
+.stockgrp .sgrp{font-family:monospace;font-size:10px;color:#ff7a3c;text-transform:uppercase;letter-spacing:.05em;padding:8px 4px 3px}
+.sic{cursor:pointer}
+.strow .editable{cursor:pointer;border-radius:3px}
+.strow .editable:hover{background:rgba(255,122,60,.16);outline:1px solid #4a463b}
+.scm.muted{color:#5e594c}
+.seye{text-align:center}
+.sinline{width:100%;box-sizing:border-box;background:#0b0b09;border:1px solid var(--accent);color:var(--text);font-family:monospace;font-size:14px;padding:3px 6px}
+.sinline.ar{text-align:right;color:var(--gold);font-weight:700}
+.sxb.eyeoff{opacity:.4}
 .picker{position:relative;display:inline-block}
 .pickbtn{display:flex;align-items:center;gap:6px;min-width:210px;max-width:280px;background:#0b0b09;border:1px solid var(--line);color:var(--text);font-family:monospace;font-size:13px;padding:4px 8px;cursor:pointer;text-align:left}
 .pickbtn:hover{border-color:var(--accent)}
@@ -505,6 +542,24 @@ button.mini2{padding:3px 10px;font-size:11px;font-weight:500}
 .rtime{font-size:12px;color:var(--muted);margin-left:4px}
 .rqty{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
 .rqty input{width:76px;padding:6px 8px}
+/* PRODUCE-бар (под рецептом, перед складом) — удобный ввод кол-ва со степперами */
+.producebar{display:flex;align-items:center;gap:0;margin:16px 0 4px;width:max-content;max-width:100%}
+.producebar .plabel{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-right:12px}
+.producebar .punit{font-size:13px;color:var(--muted);margin-left:10px}
+.producebar #qty{width:96px;height:36px;text-align:center;font-size:19px;font-weight:700;color:var(--gold);font-family:monospace;background:#0b0b09;border:1px solid var(--line);box-sizing:border-box;-moz-appearance:textfield}
+.producebar #qty::-webkit-outer-spin-button,.producebar #qty::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.pstep{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;background:#0b0b09;border:1px solid var(--line);color:var(--text);font-size:20px;cursor:pointer;user-select:none;box-sizing:border-box}
+.pstep:first-of-type{border-radius:4px 0 0 4px}
+.pstep:hover{border-color:var(--accent);color:var(--accent);background:rgba(255,122,60,.1)}
+.producebar #qty{border-left:none;border-right:none}
+.producebar .pstep:last-of-type{border-radius:0 4px 4px 0}
+/* модалка подтверждения */
+.modalov{position:fixed;inset:0;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modalbox{background:#16140f;border:1px solid var(--accent);border-radius:6px;padding:22px 24px;max-width:380px;box-shadow:0 12px 48px rgba(0,0,0,.55)}
+.modalmsg{color:var(--text);font-size:14px;margin-bottom:20px;line-height:1.45}
+.modalrow{display:flex;gap:10px;justify-content:flex-end}
+.modalyes{border-color:var(--accent);color:var(--accent)}
+.modalyes:hover{background:rgba(255,122,60,.14)}
 .charbody{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,420px));gap:6px 30px;align-items:start;margin-top:8px}
 .charsec{min-width:0}
 .charsec .stattbl{width:100%}

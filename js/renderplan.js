@@ -103,7 +103,7 @@ function renderPlan(id, qty, host){
         const ci=el("td","oreic"); ci.style.cursor="pointer"; ci.onclick=()=>showDetail(oid); ci.appendChild(icon(oid,34)); tr.appendChild(ci);
         const nm=el("td","orenm2", esc(ty(oid).name)); nm.style.cursor="pointer"; nm.onclick=()=>showDetail(oid); tr.appendChild(nm);
         tr.appendChild(el("td","orest"+(used?"":" alt"), used?num(oreR[oid])+"×":i18n("альт")));
-        if(hasStockCol){ const sq=stockQty(oid); tr.appendChild(el("td","orestock", sq>0?"+"+num(sq):"")); }
+        if(hasStockCol){ const se=curStock()[oid], sq=stockQty(oid); tr.appendChild(el("td","orestock"+((se&&se.inf)?" infv":""), (se&&se.inf)?"∞":(sq>0?"+"+num(sq):""))); }
         if(cust){
           const ltd=el("td","orelim");
           const li=el("input"); li.type="number"; li.min="0"; li.placeholder="∞"; li.className="orelimin"; li.value=oreLimit[oid]>0?String(oreLimit[oid]):"";
@@ -128,7 +128,7 @@ function renderPlan(id, qty, host){
         const ci=el("td","oreic"); ci.style.cursor="pointer"; ci.onclick=()=>showDetail(lid); ci.appendChild(icon(lid,34)); tr.appendChild(ci);
         tr.appendChild(el("td","orenm2", esc(ty(lid).name)));
         tr.appendChild(el("td","orest"+(used?"":" alt"), used?num(lootR[lid])+"×":i18n("альт")));
-        if(hasStockCol){ const sq=stockQty(lid); tr.appendChild(el("td","orestock", sq>0?"+"+num(sq):"")); }
+        if(hasStockCol){ const se=curStock()[lid], sq=stockQty(lid); tr.appendChild(el("td","orestock"+((se&&se.inf)?" infv":""), (se&&se.inf)?"∞":(sq>0?"+"+num(sq):""))); }
         if(cust) tr.appendChild(el("td","orelim"));
         const tgtd=el("td","oretgtd");
         const cb=el("input"); cb.type="checkbox"; cb.className="oretgbig"; cb.checked=!off; cb.title=off?i18n("Включить лут"):i18n("Выключить лут (если есть рудная альтернатива)");
@@ -145,89 +145,87 @@ function renderPlan(id, qty, host){
     }
     guide.appendChild(s);
   };
-  // ── БЛОК 0: СКЛАД — что уже есть (руда / рефайн / крафт); вычитается из плана ──
+  // ── БЛОК 0: СКЛАД — ВСЕ ресурсы рецепта сразу списком (руда/рефайн/крафт); вписываешь только количества (inline). Сворачиваемый. ──
   const stockSec=(its)=>{
-    const avail = (its||[]).filter((it)=> it!==id && !(it in stock));   // доступно для добавления: BOM − финал − уже добавленные
-    const sKey=(it)=>{ const c=_stockSort.col; return c==="name"?ty(it).name.toLowerCase() : c==="comment"?(stock[it].comment||"").toLowerCase() : c==="qty"?(stock[it].qty||0) : (stock[it].ord||0); };
-    const entries = Object.keys(stock).map(Number).sort((a,b)=>{ const ka=sKey(a),kb=sKey(b); return (ka<kb?-1:ka>kb?1:0)*_stockSort.dir; });
-    const s=el("div","gsec stock");
-    const h=el("div","gsech"); h.appendChild(el("span",null,"0 · "+i18n("Склад"))); s.appendChild(h);
-    const tbl=el("table","stocktbl");
-    const thr=el("tr"); thr.appendChild(el("th","",""));
-    [["Ресурс","name",""],["Комментарий","comment",""],["Кол-во","qty","ar"]].forEach(([lbl,col,cls])=>{
-      const th=el("th","sortable"+(cls?" "+cls:"")+(_stockSort.col===col?" sorted":""), i18n(lbl)+(_stockSort.col===col?(_stockSort.dir>0?" ▲":" ▼"):""));
-      th.onclick=()=>{ if(_stockSort.col===col) _stockSort.dir*=-1; else { _stockSort.col=col; _stockSort.dir=1; } recompute(); };
-      thr.appendChild(th);
-    });
-    thr.appendChild(el("th","ar", i18n("Действия")));
+    const sk=curStock();   // активный склад: общий или локальный для этого предмета
+    const grpOf=(it)=> !isCraftable(it) ? 0 : (isRefineStep(it) ? 1 : 2);   // 0 руда/лут · 1 рефайн · 2 крафт
+    const res=allBomItems(id).filter((it)=> it!==id);   // стабильный набор (по всем рецептам), чтобы строки не скакали при правке склада
+    const filledIds=Object.keys(sk).map(Number).filter((k)=> sk[k] && (sk[k].qty>0 || sk[k].inf));
+    const nFilled=filledIds.length;
+    const det=el("details","gsec stock");
+    det.open = (_stockOpen!=null) ? _stockOpen : (nFilled>0);
+    det.addEventListener("toggle", ()=>{ _stockOpen=det.open; });
+    const sum=el("summary","stocksum");
+    sum.appendChild(el("span","stockttl","0 · "+i18n("Склад")));
+    sum.appendChild(el("span","stocksub", nFilled?i18n("{n} заполнено",{n:nFilled}):i18n("впиши, что уже есть")));
+    const grp=el("div","stockbtns");
+    // единый стиль 3 кнопок; глазик+Очистить ВСЕГДА видны (неактивны при пустом складе)
+    const local=stockLocalOn.has(id);
+    const lb=el("button","sec-btn mini2 stbtn"+(local?" on":""), (local?"☑ ":"☐ ")+i18n("локальный"));
+    lb.title=i18n("Отдельный склад только для этого предмета (иначе — общий для всех)");
+    lb.onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); if(local) stockLocalOn.delete(id); else stockLocalOn.add(id); recompute(); };
+    grp.appendChild(lb);
+    const anyOn=filledIds.some((k)=>!sk[k].off);
+    const me=el("button","sec-btn mini2 stbtn eyebtn"+(anyOn?"":" dim")); me.innerHTML=ICO_EYE; me.title=anyOn?i18n("Выключить весь склад"):i18n("Включить весь склад"); if(!nFilled) me.disabled=true;
+    me.onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); filledIds.forEach((k)=>{ sk[k].off=anyOn; }); recompute(); };
+    grp.appendChild(me);
+    const clr=el("button","sec-btn mini2 stbtn", i18n("Очистить")); if(!nFilled) clr.disabled=true;
+    clr.onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); confirmModal(i18n("Очистить весь склад?"), ()=>{ for(const k in sk) delete sk[k]; recompute(); }); };
+    grp.appendChild(clr);
+    sum.appendChild(grp);
+    det.appendChild(sum);
+    const tbl=el("table","stocktbl fixed");
+    const cg=el("colgroup"); ["40px","206px","116px","132px","182px"].forEach((w)=>{ const c=el("col"); c.style.width=w; cg.appendChild(c); }); tbl.appendChild(cg);
+    const thr=el("tr"); ["", i18n("Ресурс"), i18n("Заметка"), i18n("Кол-во"), i18n("Действия")].forEach((hh,ci)=> thr.appendChild(el("th",(ci===3?"ar":""), hh)));
     const thd=el("thead"); thd.appendChild(thr); tbl.appendChild(thd);
     const tb=el("tbody"); tbl.appendChild(tb);
-    entries.forEach((it)=> tb.appendChild(dispRow(it)));
-    s.appendChild(tbl);
-    if(!entries.length) s.appendChild(el("div","note stocknote", i18n("Пусто — добавь ресурс ниже.")));
-    const bar=el("div","stockbar");
-    const addBtn=el("button","sec-btn mini2", i18n("➕ Добавить ресурс")); if(!avail.length) addBtn.disabled=true; addBtn.onclick=()=> addDraft(); bar.appendChild(addBtn);
-    if(entries.length){ const clr=el("button","sec-btn mini2", i18n("Очистить")); clr.onclick=()=>{ for(const k in stock) delete stock[k]; recompute(); }; bar.appendChild(clr); }
-    s.appendChild(bar);
-    guide.appendChild(s);
+    let _zi=0;
+    [[0,"Руда"],[1,"Рефайн"],[2,"Крафт"]].forEach(([g,lbl])=>{
+      const items=res.filter((it)=>grpOf(it)===g).sort((a,b)=>ty(a).name.localeCompare(ty(b).name));
+      if(!items.length) return;
+      const gtr=el("tr","stockgrp"); const gtd=el("td","sgrp"); gtd.colSpan=5; gtd.textContent=i18n(lbl); gtr.appendChild(gtd); tb.appendChild(gtr);
+      items.forEach((it)=>{ const r=srow(it); if(_zi++%2) r.classList.add("zeb"); tb.appendChild(r); });
+    });
+    det.appendChild(tbl);
+    guide.appendChild(det);
 
-    function dispRow(it){
-      const e=stock[it]; const tr=el("tr","strow"+(e.off?" off":""));
-      const ci=el("td","sic"); ci.style.cursor="pointer"; ci.onclick=()=>showDetail(it); ci.appendChild(icon(it,30)); tr.appendChild(ci);
+    function srow(it){
+      const e=sk[it], inf=!!(e&&e.inf), q=(e&&e.qty>0)?e.qty:0, has=(q>0||inf), off=!!(has&&e.off);
+      const tr=el("tr","strow"+(has?" has":"")+(off?" off":""));
+      const ci=el("td","sic"); ci.onclick=()=>showDetail(it); ci.appendChild(icon(it,28)); tr.appendChild(ci);
       tr.appendChild(el("td","snm", esc(ty(it).name)));
-      tr.appendChild(el("td","scm", e.comment?esc(e.comment):"—"));
-      tr.appendChild(el("td","sqty ar", num(e.qty||0)));
+      const ct=el("td","scm"+(has?" editable":"")+((has&&e.comment)?"":" muted"), (has&&e.comment)?esc(e.comment):"—"); if(has){ ct.title=i18n("Кликни — заметка"); ct.onclick=()=>edit(ct,it,"comment"); } tr.appendChild(ct);
+      const qt=el("td","sqty ar editable"+(inf?" infv":(q?"":" muted")), inf?"∞":(q?num(q):"—")); qt.title=i18n("Кликни — вписать количество"); qt.onclick=()=>edit(qt,it,"qty"); tr.appendChild(qt);
       const act=el("td","sact");
-      act.appendChild(actBtn(ICO_EDIT, i18n("Редактировать"), ()=> editRow(tr,it), "ed"));
-      act.appendChild(actBtn(ICO_EYE, e.off?i18n("Включить"):i18n("Отключить"), ()=>{ e.off=!e.off; recompute(); }, "eye"+(e.off?" eyeoff":"")));
-      act.appendChild(actBtn(ICO_DEL, i18n("Удалить"), ()=>{ delete stock[it]; recompute(); }, "del"));
-      tr.appendChild(act); return tr;
-    }
-    function editRow(tr, it){
-      const e=stock[it]; tr.className="strow editing"; tr.innerHTML="";
-      const ci=el("td","sic"); ci.appendChild(icon(it,30)); tr.appendChild(ci);
-      tr.appendChild(el("td","snm", esc(ty(it).name)));
-      const cm=mkInput("text", e.comment||"", i18n("комментарий")); const cmTd=el("td","scm"); cmTd.appendChild(cm); tr.appendChild(cmTd);
-      const qi=mkInput("number", e.qty||"", "0", "qin"); const qTd=el("td","sqty ar"); qTd.appendChild(qi); tr.appendChild(qTd);
-      const act=el("td","sact");
-      const save=()=>{ const q=parseInt(qi.value)||0; if(!q) delete stock[it]; else { e.qty=q; e.comment=cm.value.trim(); } recompute(); };
-      act.appendChild(actBtn("✓", i18n("Сохранить"), save, "ok"));
-      act.appendChild(actBtn("×", i18n("Отмена"), ()=> tr.replaceWith(dispRow(it))));
-      tr.appendChild(act); qi.focus(); cm.onkeydown=qi.onkeydown=(ev)=>{ if(ev.key==="Enter") save(); };
-    }
-    function itemGroup(it){ return !isCraftable(it) ? 0 : (isRefineStep(it) ? 1 : 2); }   // 0 руда/лут · 1 рефайн · 2 крафт
-    function addDraft(){
-      if(!avail.length) return;
-      const tr=el("tr","strow editing draft"); tb.appendChild(tr);
-      const icTd=el("td","sic"); const icoW=el("span"); icTd.appendChild(icoW); tr.appendChild(icTd);
-      let chosen=null;
-      const pk=el("div","picker"); const pb=el("button","pickbtn", i18n("— выбери ресурс —")); pk.appendChild(pb);
-      const menu=el("div","pickmenu"); pk.appendChild(menu);
-      const selTd=el("td","snm"); selTd.appendChild(pk); tr.appendChild(selTd);
-      const cm=mkInput("text","",i18n("комментарий")); const cmTd=el("td","scm"); cmTd.appendChild(cm); tr.appendChild(cmTd);
-      const qi=mkInput("number","","0","qin"); const qTd=el("td","sqty ar"); qTd.appendChild(qi); tr.appendChild(qTd);
-      // опции с иконками, группами Руда/Рефайн/Крафт + разделители
-      [[0,"Руда"],[1,"Рефайн"],[2,"Крафт"]].forEach(([g,lbl])=>{
-        const items=avail.filter((it)=>itemGroup(it)===g).sort((a,b)=>ty(a).name.localeCompare(ty(b).name));
-        if(!items.length) return;
-        menu.appendChild(el("div","pickgrp", i18n(lbl)));
-        items.forEach((it)=>{ const o=el("div","pickopt"); o.appendChild(icon(it,22)); o.appendChild(el("span",null, esc(ty(it).name)));
-          o.onclick=()=>{ chosen=it; pb.innerHTML=""; pb.appendChild(icon(it,22)); pb.appendChild(el("span","pbnm"," "+esc(ty(it).name))); menu.classList.remove("open"); icoW.innerHTML=""; icoW.appendChild(icon(it,30)); qi.focus(); };
-          menu.appendChild(o); });
-      });
-      pb.onclick=(e)=>{ e.stopPropagation(); menu.classList.toggle("open"); };
-      const closeMenu=(e)=>{ if(!pk.contains(e.target)) menu.classList.remove("open"); };
-      setTimeout(()=> document.addEventListener("click", closeMenu), 0);
-      const fin=()=> document.removeEventListener("click", closeMenu);
-      const act=el("td","sact");
-      const add=()=>{ if(!chosen){ menu.classList.add("open"); return; } const q=parseInt(qi.value)||0; if(!q){ qi.focus(); return; } fin(); const nord=Object.values(stock).reduce((m,e)=>Math.max(m,e.ord||0),0)+1; stock[chosen]={qty:q, comment:cm.value.trim(), off:false, ord:nord}; recompute(); };
-      act.appendChild(actBtn("✓", i18n("Добавить"), add, "ok"));
-      act.appendChild(actBtn("×", i18n("Отмена"), ()=>{ fin(); tr.remove(); }));
+      act.appendChild(actBtn("∞", inf?i18n("Снять «бесконечно»"):i18n("Бесконечно (не добывать)"), ()=>toggleInf(it), "inf"+(inf?" on":"")));
+      if(has){
+        if(!inf) act.appendChild(actBtn(ICO_EDIT, i18n("Изменить количество"), ()=>edit(qt,it,"qty"), "ed"));
+        act.appendChild(actBtn(ICO_EYE, off?i18n("Включить"):i18n("Отключить"), ()=>{ e.off=!e.off; recompute(); }, "eye"+(off?" eyeoff":"")));
+        act.appendChild(actBtn(ICO_DEL, i18n("Удалить"), ()=>{ confirmModal(i18n("Убрать «{name}» из склада?",{name:ty(it).name}), ()=>{ delete sk[it]; recompute(); }); }, "del"));
+      }
       tr.appendChild(act);
-      menu.classList.add("open"); qi.onkeydown=(ev)=>{ if(ev.key==="Enter") add(); };
+      return tr;
     }
-    function actBtn(label, title, fn, cls){ const b=el("button","sxb"+(cls?" "+cls:""), label); b.title=title; b.onclick=(e)=>{ e.stopPropagation(); fn(); }; return b; }
-    function mkInput(type, val, ph, cls){ const i=el("input"); i.type=type; if(type==="number") i.min="0"; i.className="sin"+(cls?" "+cls:""); i.placeholder=ph||""; i.value=val; i.onclick=(e)=>e.stopPropagation(); return i; }
+    function toggleInf(it){ const e=sk[it]; if(e){ e.inf=!e.inf; if(!e.inf && !(e.qty>0)) delete sk[it]; } else sk[it]={qty:0, comment:"", off:false, inf:true, ord:(Object.values(sk).reduce((m,x)=>Math.max(m,x.ord||0),0)+1)}; recompute(); }
+    function actBtn(svg, title, fn, cls){ const b=el("button","sxb "+cls); b.innerHTML=svg; b.title=title; b.onclick=(ev)=>{ ev.stopPropagation(); fn(); }; return b; }
+    function edit(td, it, field){
+      if(td.querySelector("input")) return;
+      const e=sk[it];
+      const inp=el("input"); inp.className="sinline"+(field==="qty"?" ar":"");
+      if(field==="qty"){ inp.type="number"; inp.min="0"; inp.value=(e&&e.qty>0)?String(e.qty):""; }
+      else { inp.type="text"; inp.value=(e&&e.comment)||""; inp.placeholder=i18n("заметка"); }
+      td.textContent=""; td.appendChild(inp); inp.focus(); if(field==="qty") inp.select();
+      let done=false;
+      const commit=()=>{ if(done) return; done=true;
+        if(field==="qty"){ const v=parseInt(inp.value)||0;
+          if(v>0){ if(sk[it]){ sk[it].qty=v; sk[it].inf=false; } else sk[it]={qty:v, comment:"", off:false, inf:false, ord:(Object.values(sk).reduce((m,x)=>Math.max(m,x.ord||0),0)+1)}; }
+          else if(sk[it] && !sk[it].inf) delete sk[it];
+        } else if(sk[it]) sk[it].comment=inp.value.trim();
+        recompute();
+      };
+      inp.onblur=commit;
+      inp.onkeydown=(ev)=>{ if(ev.key==="Enter") inp.blur(); else if(ev.key==="Escape"){ done=true; inp.onblur=null; showDetail(id); } };
+    }
   };
   // ЭТАП шагов (крафт): один ряд на ПРОГОН рецепта (LP может расщеплять материал на неск. рецептов)
   const stepSec=(title,cls,sts)=> planSec(title,cls,(tb)=>{

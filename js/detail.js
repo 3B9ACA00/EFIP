@@ -38,7 +38,15 @@ function showDetail(id, qtyOverride){
     const inp = el("input"); inp.type="number"; inp.min="1"; inp.id="qty";   // сколько произвести → драйвит план
     inp.value = (qtyOverride && qtyOverride > 1) ? String(qtyOverride) : "1";
     let run;
-    tMain.appendChild(recipeBlock(recs, id, inp));   // постройки в 1-й строке = переключатель пути
+    tMain.appendChild(recipeBlock(recs, id, null));   // qty вынесен из строки результата в отдельный бар ниже
+    // ── PRODUCE-бар: под рецептом (craft table), ПЕРЕД складом/планом; удобный ввод со степперами ──
+    const pbar = el("div","producebar");
+    pbar.appendChild(el("span","plabel", i18n("Произвести")));
+    const pdec=el("button","pstep"); pdec.type="button"; pdec.textContent="−"; pdec.onclick=()=>{ inp.value=Math.max(1,(parseInt(inp.value)||1)-1); run(); };
+    pbar.appendChild(pdec); pbar.appendChild(inp);
+    const pinc=el("button","pstep"); pinc.type="button"; pinc.textContent="+"; pinc.onclick=()=>{ inp.value=(parseInt(inp.value)||1)+1; run(); };
+    pbar.appendChild(pinc); pbar.appendChild(el("span","punit", i18n("шт")));
+    tMain.appendChild(pbar);
     const psec = el("div","sec");
     const res = el("div"); res.id="planres"; psec.appendChild(res);   // постройки считаем доступными (фильтр убран)
     graphRes = el("div");

@@ -36,15 +36,22 @@ let orePriority = [];     // приоритет руд (custom): выше = ра
 const oreDisabled = new Set();   // выключенные руды (исключены из расчёта)
 let oreMode = "volume";   // пресет оптимизации: 'volume'|'time'|'types'|'custom'
 const oreLimit = {};      // custom: oreId -> макс. единиц (лимит копки)
-const stock = {};         // склад: itemId -> {qty, comment, off, ord} (ord = порядок добавления)
+const stock = {};         // склад (глобальный, общий): itemId -> {qty, comment, off, ord}
+const stockLocal = {};    // локальные склады per-item: rootId -> {itemId:{...}}
+const stockLocalOn = new Set();   // rootId, у которых включён ЛОКАЛЬНЫЙ склад (иначе общий)
+let _stockRoot = null;    // корень текущего плана (для curStock в локальном режиме)
 let _stockSort = { col:"ord", dir:1 };   // сортировка склада: ord(по умолч.)/name/comment/qty
+let _stockOpen = null;   // развёрнут ли блок Склад (<details>); null = по умолчанию (открыт если есть заполненные)
 try{
   orePriority = JSON.parse(localStorage.getItem("ef_orePrio")||"[]")||[];
   (JSON.parse(localStorage.getItem("ef_oreOff")||"[]")||[]).forEach((x)=>oreDisabled.add(x));
   oreMode = localStorage.getItem("ef_oreMode") || "volume"; if(oreMode==="types") oreMode="volume";   // пресет 'types' убран
   Object.assign(oreLimit, JSON.parse(localStorage.getItem("ef_oreLimit")||"{}")||{});
   Object.assign(stock, JSON.parse(localStorage.getItem("ef_stock")||"{}")||{});
-  let _so=0; for(const k in stock){ const v=stock[k]; if(typeof v!=="object"||!v) stock[k]={qty:+v||0,comment:"",off:false}; if(stock[k].ord==null) stock[k].ord=++_so; }   // миграция формата + порядок
+  Object.assign(stockLocal, JSON.parse(localStorage.getItem("ef_stock_local")||"{}")||{});
+  (JSON.parse(localStorage.getItem("ef_stock_localon")||"[]")||[]).forEach((x)=>stockLocalOn.add(+x));
+  const _mig=(s)=>{ let o=0; for(const k in s){ const v=s[k]; if(typeof v!=="object"||!v) s[k]={qty:+v||0,comment:"",off:false}; if(s[k].ord==null) s[k].ord=++o; } };
+  _mig(stock); for(const r in stockLocal) _mig(stockLocal[r]);
 }catch(e){}
 function saveOrePrefs(){ try{
   localStorage.setItem("ef_orePrio", JSON.stringify(orePriority));
@@ -52,8 +59,25 @@ function saveOrePrefs(){ try{
   localStorage.setItem("ef_oreMode", oreMode);
   localStorage.setItem("ef_oreLimit", JSON.stringify(oreLimit));
   localStorage.setItem("ef_stock", JSON.stringify(stock));
+  localStorage.setItem("ef_stock_local", JSON.stringify(stockLocal));
+  localStorage.setItem("ef_stock_localon", JSON.stringify([...stockLocalOn]));
 }catch(e){} }
-function stockQty(id){ const s=stock[id]; return (s && !s.off) ? (+s.qty||0) : 0; }   // эффективное кол-во со склада (0 если отключён)
+// активный склад: общий (stock) или локальный для корня плана (если включён локальный режим)
+function curStock(){ const r=(_stockRoot!=null)?_stockRoot:selected; return stockLocalOn.has(r) ? (stockLocal[r]||(stockLocal[r]={})) : stock; }
+function stockQty(id){ const s=curStock()[id]; if(!s||s.off) return 0; return s.inf ? 1e15 : (+s.qty||0); }   // эффективное кол-во со склада (0 если отключён; ∞ = 1e15)
+// модалка подтверждения (нет нативного confirm-стиля под тему); onYes() при «Да»/Enter
+function confirmModal(msg, onYes){
+  const mk=(tag,cls,txt)=>{ const e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; };
+  const ov=mk("div","modalov"), box=mk("div","modalbox");
+  box.appendChild(mk("div","modalmsg",msg));
+  const row=mk("div","modalrow"), no=mk("button","sec-btn",i18n("Отмена")), yes=mk("button","sec-btn modalyes",i18n("Да"));
+  const close=()=>{ ov.remove(); document.removeEventListener("keydown",key); };
+  const key=(ev)=>{ if(ev.key==="Escape") close(); else if(ev.key==="Enter"){ close(); onYes(); } };
+  no.onclick=close; yes.onclick=()=>{ close(); onYes(); }; ov.onclick=(ev)=>{ if(ev.target===ov) close(); };
+  document.addEventListener("keydown",key);
+  row.appendChild(no); row.appendChild(yes); box.appendChild(row); ov.appendChild(box);
+  document.body.appendChild(ov); yes.focus();
+}
 const _costMemo = {};    // мемоизация стоимости (объём сырья на 1 ед.)
 
 // ── утилиты ──────────────────────────────────────────
@@ -140,6 +164,9 @@ const EN = {
   "Редактировать":"Edit","Удалить":"Delete","Отключить":"Disable","Включить":"Enable","Сохранить":"Save","Отмена":"Cancel","Добавить":"Add",
   "комментарий":"comment","— выбери ресурс —":"— pick a resource —","Пусто — жми «Добавить ресурс», чтобы указать, что уже есть.":"Empty — click “Add resource” to list what you already have.",
   "Склад":"Stock","Рефайн":"Refine","Крафт":"Craft","Действия":"Actions","Пусто — добавь ресурс ниже.":"Empty — add a resource below.",
+  "Заметка":"Note","заметка":"note","{n} заполнено":"{n} filled","впиши, что уже есть":"enter what you have","Выключить весь склад":"Disable all stock","Включить весь склад":"Enable all stock","Кликни — вписать количество":"Click to enter quantity","Кликни — заметка":"Click to add a note",
+  "локальный":"local","Отдельный склад только для этого предмета (иначе — общий для всех)":"Separate stock for this item only (otherwise shared)","Изменить количество":"Edit quantity","Бесконечно (не добывать)":"Infinite (don't mine/loot)","Снять «бесконечно»":"Remove infinite",
+  "Произвести":"Produce","шт":"pcs","Да":"Yes","Отмена":"Cancel","Очистить весь склад?":"Clear all stock?","Убрать «{name}» из склада?":"Remove «{name}» from stock?",
   "тащи строку или ▲▼ = приоритет · ☑ вкл/выкл":"drag row or ▲▼ = priority · ☑ on/off","порядок — авто по пресету":"order auto by preset","⟲ Сбросить лимиты":"⟲ Reset limits","Сбросить лимит":"Clear limit",
   "Руда":"Ore","Нужно":"Need","вкл":"on","Лимит":"Limit",
   "Минимум объёма руды на хаул — макс. выход материала на m³.":"Least ore volume to haul — max material per m³.","Минимум суммарного времени переработки.":"Least total refining time.",

@@ -141,6 +141,15 @@ function planLoot(rootId){
   })(rootId);
   return [...loot];
 }
+// ВСЕ ресурсы (руда+материалы+побочка), достижимые в дереве предмета по ЛЮБОМУ рецепту (recipeOk).
+// Стабильный набор для грида склада — НЕ зависит от текущего выбора рецептов LP (иначе строки скачут при правке склада).
+function allBomItems(rootId){
+  const set=new Set(), seen=new Set();
+  (function walk(id){ if(seen.has(id)) return; seen.add(id); set.add(id);
+    (byOut[id]||[]).forEach((r)=>{ if(!recipeOk(r)) return; (r.out||[]).forEach((o)=>set.add(o.id)); (r.inp||[]).forEach((i)=>{ set.add(i.id); walk(i.id); }); });
+  })(rootId);
+  return [...set];
+}
 // материалы, у которых есть рецепты, но ВСЕ перекрыты (выключенной рудой) → крафт невозможен
 function blockedMaterials(rootId){
   const blocked=[], seen=new Set();
@@ -185,6 +194,7 @@ function oresOverLimit(p){ const over=[]; for(const o in oreLimit){ if(oreLimit[
 // ГЛОБАЛЬНЫЙ ОПТИМУМ через LP (режимы volume/time): минимизируем суммарный объём руды (или время) с учётом
 // совместных выходов / склада / выключенных руд / «всегда Refinery». Возвращает выбор рецептов {materialId: idx}.
 function lpSelect(rootId, qty){
+  _stockRoot = rootId;
   if(typeof lpSolve === "undefined") return null;
   const itemSet=new Set(), seen=new Set(), recSet=new Set();
   (function walk(id){ if(seen.has(id)) return; seen.add(id); itemSet.add(id);
@@ -248,6 +258,7 @@ function lpBuild(rootId, qty, model){
 // Фикспоинт: число прогонов каждого крафт-предмета = ceil((спрос − побочка от других рецептов)/выход).
 // Так побочка (напр. Hydrocarbon Residue из переработки Feldspar) уменьшает отдельную переработку под неё.
 function plan(rootId, qty){
+  _stockRoot = rootId;
   for(const k in _lpChoice) delete _lpChoice[k];
   if(oreMode!=="custom"){ const m=lpSelect(rootId, qty); if(m){ Object.assign(_lpChoice, m.choice); return lpBuild(rootId, qty, m); } }
   // (custom, либо LP не решился) — жадный фикспоинт с зачётом побочки
