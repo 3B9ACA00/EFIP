@@ -1,0 +1,713 @@
+:root{
+  /* палитра EVE Frontier (evefrontier.com): чёрная база, тёплый off-white текст,
+     акцент — martian-red/оранж #ff4700 (как на сайте), без неонового лайма */
+  --bg:#0b0b0b; --panel:#141312; --panel2:#1c1a16; --line:#322e27;
+  --text:#fafae5; --muted:#a59f90; --accent:#ff4700; --accent2:#c23800;
+  --green:#ffb651; --gold:#ffb651; --red:#e0344f; --violet:#ff7a3c;
+  --ink:#0b0b0b;  /* тёмный текст на ярком акценте */
+  --font-mono:"Disket Mono","JetBrains Mono","Cascadia Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+body{display:flex;flex-direction:column;overflow:hidden}
+a{color:var(--accent);text-decoration:none}
+
+/* header */
+header{display:flex;align-items:center;gap:22px;position:relative;
+  padding:10px 16px;border-bottom:1px solid var(--line);
+  background:radial-gradient(130% 200% at 50% -85%, rgba(255,71,0,.18), rgba(255,71,0,0) 55%), linear-gradient(180deg,#120c07,#0b0b0b)}
+.brand{display:flex;align-items:center;gap:10px;flex:none}
+.logo{display:grid;place-items:center;width:36px;height:36px;border-radius:0;font-weight:800;
+  font-family:var(--font-mono);color:var(--accent);background:#0f0f0c;box-shadow:inset 0 0 0 1px rgba(255,71,0,.5),0 0 14px rgba(255,71,0,.12)}
+.title{font-size:16px;font-weight:700;line-height:1}
+.sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* (3) горизонтальное меню */
+.topnav{display:flex;align-items:center;gap:4px}
+.navlink{padding:7px 13px;border-radius:0;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap}
+.navlink:hover{background:rgba(255,71,0,.08);color:var(--text)}
+.navlink.active{background:rgba(255,71,0,.1);color:#ffb38a;box-shadow:inset 0 0 0 1px rgba(255,71,0,.4)}
+.navlink.dis{opacity:.45;cursor:not-allowed}
+.navlink.dis:hover{background:none;color:var(--muted)}
+.langsw{margin-left:auto;display:flex;border:1px solid var(--line);flex:none}
+.langsw button{background:var(--panel2);color:var(--muted);border:0;border-left:1px solid var(--line);
+  font-family:var(--font-mono);font-size:11px;font-weight:700;padding:6px 11px;cursor:pointer;letter-spacing:.5px}
+.langsw button:first-child{border-left:0}
+.langsw button:hover{color:var(--text)}
+.langsw button.on{background:var(--accent);color:var(--ink)}
+
+/* (4) бар: большой поиск + хлебные крошки */
+.subbar{display:flex;align-items:center;gap:16px;padding:9px 16px;background:#100f0d;border-bottom:1px solid var(--line)}
+.bigsearch{width:min(460px,42vw);padding:9px 14px;border-radius:0;border:1px solid var(--line);background:#080807;color:var(--text);font-size:14px}
+.crumbs{display:flex;align-items:center;gap:7px;flex:1;min-width:0;font-size:13px;color:var(--muted);overflow:hidden;white-space:nowrap}
+.crumb{color:var(--accent);cursor:pointer}
+.crumb:hover{text-decoration:underline}
+.crumb.cur{color:var(--text);cursor:default;text-decoration:none}
+.crumbsep{color:#473f33}
+
+/* layout: 3 колонки — категории | предметы | контент */
+main{flex:1;display:grid;grid-template-columns:188px 296px 1fr;min-height:0}
+.cats{overflow:auto;border-right:1px solid var(--line);background:#080807;padding:6px}
+.itemcol{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line);background:#0d0d0b}
+.itemhead{display:flex;align-items:center;gap:7px;padding:8px;border-bottom:1px solid var(--line);background:#100f0d}
+.itemhead #search{flex:1;min-width:0;padding:7px 10px;border-radius:0;border:1px solid var(--line);background:#080807;color:var(--text)}
+.chk{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);white-space:nowrap}
+.chk input{accent-color:var(--accent)}
+.list{overflow:auto;flex:1;min-height:0}
+.stat{font-size:11px;color:var(--muted);padding:6px 10px;border-top:1px solid var(--line);background:#100f0d;text-align:right}
+.detail{overflow:auto;padding:18px 22px}
+
+/* (1) сайдбар категорий */
+.catrow{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:0;cursor:pointer}
+.catrow:hover{background:#16140f}
+.catrow.sel{background:rgba(255,71,0,.1);box-shadow:inset 2px 0 0 var(--accent)}
+.catdot{width:10px;height:10px;border-radius:0;flex:none}
+.catname{font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.catcnt{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* (2) переключатель вида */
+.viewtoggle{display:flex;gap:2px;flex:none}
+.vbtn{padding:6px 9px;font-size:14px;line-height:1;background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:0;font-weight:600}
+.vbtn.on{background:rgba(255,71,0,.1);color:#ffb38a;border-color:rgba(255,71,0,.4)}
+.vbtn:hover{filter:brightness(1.15)}
+
+/* список предметов — плитка */
+.list.tile{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:6px;padding:8px;align-content:start}
+.tilecard{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 5px;border-radius:0;cursor:pointer;border:1px solid transparent;text-align:center}
+.tilecard:hover{background:#16140f;border-color:var(--line)}
+.tilecard.sel{background:rgba(255,71,0,.1);border-color:var(--accent)}
+.tilecard .tnm{font-size:11px;line-height:1.25;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tilecard.craftable .tnm{color:#ffb38a}
+/* список предметов — список */
+.list.rows{padding:0}
+
+/* icons */
+.ic,.ph{display:inline-grid;place-items:center;vertical-align:middle;border-radius:0;overflow:hidden;flex:none}
+.ic img{display:block;object-fit:contain;border-radius:0}
+.ph{font-weight:800;color:#080807;letter-spacing:-.5px;line-height:1}
+
+/* list rows */
+.row{display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer;border-bottom:1px solid #191712}
+.row:hover{background:#16140f}
+.row.sel{background:rgba(255,71,0,.1);box-shadow:inset 3px 0 0 var(--accent)}
+.cathead{position:sticky;top:0;z-index:2;background:#080807;color:#b6b6a6;
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  padding:6px 12px;border-bottom:1px solid var(--line);border-top:1px solid #1f1d19}
+.cathead .cnt{color:var(--muted);font-weight:500;margin-left:4px}
+.row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .meta{font-size:11px;color:var(--muted)}
+.row .rt{margin-left:auto;font-size:10px;color:var(--muted)}
+.tag{font-size:10px;padding:1px 6px;border-radius:0;background:#223; color:#b6b6a6}
+.tag.craft{background:rgba(255,71,0,.14);color:#ff4700}
+
+/* detail */
+.dhead{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;
+  padding:10px 0;margin-bottom:4px;background:var(--bg);border-bottom:1px solid var(--line)}
+.dhead .ic,.dhead .ph{width:56px;height:56px}
+.dname{font-size:20px;font-weight:700}
+.dmeta{color:var(--muted);font-size:12px;margin-top:2px}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:0;border:1px solid var(--line);margin-right:6px}
+.linkbtn{margin-left:auto;align-self:center;white-space:nowrap}
+.sec{margin-top:16px}
+.sec h3{margin:0 0 8px;font-size:14px;font-weight:700;color:#fafae5;letter-spacing:.3px}
+
+/* сворачиваемые секции */
+.foldsec{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:0;padding:0}
+.foldsec>summary{cursor:pointer;list-style:none;padding:10px 14px;font-weight:700;font-size:13px;color:#e9e7d4;user-select:none}
+.foldsec>summary::-webkit-details-marker{display:none}
+.foldsec>summary::before{content:"▸";color:var(--muted);margin-right:8px}
+.foldsec[open]>summary::before{content:"▾"}
+.foldsec>summary:hover{color:#fff}
+.foldsec>:not(summary){margin:0 12px 12px}
+
+/* recipe */
+.recipe{background:var(--panel);border:1px solid var(--line);border-radius:0;padding:12px 14px;margin-bottom:10px}
+.recipe .out{display:flex;align-items:center;gap:8px;font-weight:600;padding:3px 0;cursor:pointer}
+.recipe .out.prim{font-weight:700;color:#fff}
+.recipe .out:hover{filter:brightness(1.15)}
+.bptag{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:0;padding:0 5px;margin-left:4px}
+.recipe .arrow{color:var(--muted);margin:6px 0 2px}
+.ing{display:flex;align-items:center;gap:8px;padding:4px 0}
+.ing .q{min-width:54px;text-align:right;font-variant-numeric:tabular-nums;color:#e9e7d4;font-weight:600}
+.ing .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ing .raw{font-size:10px;color:var(--gold);border:1px solid #4a3a18;border-radius:0;padding:0 5px}
+.rt{color:var(--muted);font-size:12px}
+
+/* facilities */
+.facrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid #2a2823}
+.faclbl{font-size:12px;color:var(--muted);margin-right:2px}
+.facwrap{display:flex;flex-wrap:wrap;gap:8px}
+.facchip{display:inline-flex;align-items:center;gap:2px;padding:3px 9px 3px 4px;border-radius:0;
+  background:rgba(255,71,0,.1);border:1px solid rgba(255,71,0,.4);color:#e9e7d4;font-size:12px;cursor:pointer}
+.facchip:hover{background:rgba(255,71,0,.18)}
+.facchip.big{font-size:13px;padding:5px 12px 5px 5px}
+
+/* planner */
+.planbar{display:flex;align-items:center;gap:10px;margin:6px 0 14px}
+.planbar input{width:90px;padding:7px 10px;border-radius:0;border:1px solid var(--line);background:#0d0d0b;color:var(--text)}
+button{font:inherit;color:var(--ink);background:linear-gradient(180deg,var(--accent),var(--accent2));
+  border:1px solid #c23800;padding:8px 14px;border-radius:0;cursor:pointer;font-weight:700}
+button:hover{filter:brightness(1.1)}
+button.sec-btn{background:var(--panel2);border-color:var(--line);color:var(--text);font-weight:500}
+button.mini2{padding:3px 10px;font-size:11px;font-weight:500}
+
+/* path selector */
+.pathtabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.pathtab{background:var(--panel2);border:1px solid var(--line);color:var(--text);
+  padding:6px 11px;border-radius:0;cursor:pointer;font-weight:500;font-size:12px;
+  max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.pathtab:hover{filter:brightness(1.12)}
+.pathtab.on{background:linear-gradient(180deg,var(--accent),var(--accent2));border-color:#c23800;color:var(--ink);font-weight:700}
+.pathtab .ps{color:var(--muted);margin-left:6px;font-size:11px}
+.pathtab.on .ps{color:#ffd9c4}
+.cardhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cardhead h4{margin:0}
+
+/* таблица путей рецепта */
+.ptbl{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--panel);
+  border:1px solid var(--line);border-radius:0;overflow:hidden}
+.ptbl th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;
+  padding:8px 10px;border-bottom:1px solid var(--line);background:#100f0d}
+.ptbl td{padding:7px 10px;border-bottom:1px solid #1f1d19;vertical-align:top}
+.ptbl tr:last-child td{border-bottom:0}
+.ptbl tr.ptr{cursor:pointer}
+.ptbl tr.ptr:hover{background:#16140f}
+.ptbl tr.on{background:rgba(255,71,0,.1);box-shadow:inset 3px 0 0 var(--accent)}
+.ptbl .c-pick{width:22px;text-align:center;color:var(--accent);font-size:13px}
+.ptbl .c-time{white-space:nowrap;color:var(--muted)}
+.ptbl .c-fac{white-space:nowrap}
+.ptbl .fnm{color:#e9e7d4}
+.ptbl .cell{display:flex;align-items:center;gap:4px;padding:1px 0;white-space:nowrap}
+.ptbl .cell.prim{font-weight:700;color:#fff}
+.ptbl .cell b{font-variant-numeric:tabular-nums}
+.ptbl .c-vol{white-space:nowrap;font-variant-numeric:tabular-nums}
+.ptbl tr.best{background:rgba(63,185,80,.06)}
+.besttag{color:var(--green);font-size:10px;font-weight:700;margin-left:4px}
+.loottag{color:var(--gold);font-size:10px;font-weight:700;margin-left:4px}
+.loot{font-size:10px;color:var(--gold);border:1px solid #4a3a18;border-radius:0;padding:0 5px;margin-left:6px}
+.lootw{color:var(--gold);font-weight:700}
+
+/* мои постройки */
+.facbox{margin:10px 0;padding:10px 12px;background:#100f0d;border:1px solid var(--line);border-radius:0}
+.facboxh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:8px}
+.fhlbl{margin-right:auto;font-weight:600}
+.facchecks{display:flex;flex-wrap:wrap;gap:6px}
+.faccheck{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 9px;border-radius:0;
+  background:var(--panel2);border:1px solid var(--line);cursor:pointer}
+.faccheck input{accent-color:var(--green)}
+.faccheck.off{opacity:.45;text-decoration:line-through}
+.faccheck .ic,.faccheck .ph{vertical-align:middle}
+
+/* пошаговый гайд */
+.guideh{margin-top:6px}
+.guide{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.gsec{background:var(--panel);border:1px solid var(--line);border-radius:0;padding:10px 12px;border-left:3px solid var(--line)}
+.gsec.loot{border-left-color:var(--gold)}
+.gsec.ore{border-left-color:#c98a3a}
+.gsec.refine{border-left-color:#4bbcae}
+.gsec.craft{border-left-color:var(--accent)}
+.gsec.final{border-left-color:var(--red)}
+.gsech{font-weight:700;font-size:13px;margin-bottom:7px}
+.gli{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid #1f1d19;flex-wrap:wrap}
+.gli:last-child{border-bottom:0}
+.gli .q{min-width:50px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:#e9e7d4}
+.gli .nm{font-weight:600}
+.gfac{font-size:11px;color:#b6b6a6;border:1px solid rgba(255,71,0,.4);border-radius:0;padding:0 6px}
+.gfrom{font-size:11px;color:var(--muted)}
+
+/* нехватка построек */
+.blockwarn{background:rgba(240,85,107,.08);border:1px solid rgba(240,85,107,.4);border-radius:0;padding:10px 12px;margin-bottom:12px}
+.bwh{color:var(--red);font-weight:700;font-size:13px;margin-bottom:7px}
+
+/* постройка и переключатель путей в дереве */
+.tfac{color:#b6b6a6;margin-left:8px;font-size:11px}
+.tfac .ic,.tfac .ph{vertical-align:middle}
+.treepaths{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 7px 26px}
+.tpath{font-family:inherit;font-size:11px;background:var(--panel2);border:1px solid var(--line);
+  color:var(--text);padding:2px 8px;border-radius:0;cursor:pointer;white-space:nowrap}
+.tpath:hover{filter:brightness(1.15)}
+.tpath.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:#fff}
+.tpath.best{color:#bfe6c6}
+.tpath .v{color:var(--muted);margin-left:3px}
+
+/* фиттинг: слоты → модули */
+.fittbl .slotname{font-weight:600;white-space:nowrap}
+.fittbl .slotn{text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.fittbl td{vertical-align:top}
+.modchips{display:flex;flex-wrap:wrap;gap:5px;max-height:130px;overflow:auto}
+.modchip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px 2px 3px;border-radius:0;
+  background:rgba(255,71,0,.1);border:1px solid rgba(255,71,0,.4);color:#e9e7d4;font-size:11px;cursor:pointer}
+.modchip:hover{background:rgba(255,71,0,.18)}
+.engtbl{margin-top:4px}
+.engtbl .engnm{display:flex;align-items:center;gap:5px;font-weight:600;white-space:nowrap}
+.engtbl td{font-variant-numeric:tabular-nums}
+.engtbl td.best{color:var(--green);font-weight:700}
+.slottbl{margin-top:2px;font-size:11.5px}
+.slottbl td:not(.engnm):not(.slotgrp){text-align:right;font-variant-numeric:tabular-nums}
+.slottbl td.best{color:var(--green);font-weight:700}
+.slottbl .engnm{white-space:nowrap}
+.slottbl .slotgrp{color:var(--muted);font-size:11px;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.slotscroll{max-height:300px;overflow:auto}
+
+/* фитилка */
+.fitgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:8px;margin-bottom:12px}
+.fitslot{display:flex;align-items:center;gap:8px}
+.fitslotlbl{min-width:74px;font-size:12px;color:var(--muted)}
+.fitslot select{flex:1;min-width:0;padding:6px 8px;border-radius:0;border:1px solid var(--line);background:#0d0d0b;color:var(--text);font-size:12px}
+.fitsum{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.resbar{display:flex;flex-direction:column;gap:3px}
+.rblbl{font-size:12px;font-weight:600;color:#e9e7d4}
+.rbtrack{height:9px;background:#0d0d0b;border:1px solid var(--line);border-radius:0;overflow:hidden}
+.rbfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .15s}
+.resbar.over .rbfill{background:linear-gradient(90deg,#f0556b,#b3253a)}
+.resbar.over .rblbl{color:var(--red)}
+.fitcost{font-size:13px;padding:8px 11px;background:#100f0d;border:1px solid var(--line);border-radius:0}
+.fitcost b{color:#fff}
+.openfit{margin-top:10px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-color:#c23800;color:var(--ink);font-weight:700}
+
+/* фит-вил (EVE-стиль) */
+.fithead{display:flex;align-items:center;gap:10px;margin:6px 0 16px}
+.fittitle{font-size:18px;font-weight:700}
+.fitwrap{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.fitwheel{position:relative;flex:none;border-radius:50%;
+  background:radial-gradient(circle at 50% 45%, #16202e, #080807 72%);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.6), 0 0 0 1px var(--line)}
+.wcenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.wcenter .ic,.wcenter .ph{width:124px;height:124px;border-radius:50%;box-shadow:0 0 0 2px #2a3a52, 0 0 36px rgba(255,71,0,.25)}
+.wcname{margin-top:7px;font-weight:700;font-size:13px;color:#fafae5}
+.wslot{position:absolute;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
+  background:#1a2330;border:2px solid #33425a;cursor:pointer;font-size:24px;color:var(--muted);overflow:hidden;transition:transform .1s}
+.wslot:hover{transform:scale(1.13);z-index:2}
+.wslot.act{box-shadow:0 0 0 3px var(--accent);border-color:var(--accent)}
+.wslot-hi{border-color:#a05663} .wslot-med{border-color:#3a6f93} .wslot-low{border-color:#4f8a5e} .wslot-engine{border-color:#9a8442}
+.wslot .ic,.wslot .ph{width:42px;height:42px;border-radius:50%}
+.fitpanel{flex:1;min-width:300px}
+.modpick{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:0;padding:8px;max-height:440px;overflow:auto}
+.mph{font-weight:700;font-size:13px;margin-bottom:8px;color:#fafae5}
+.modopt{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:0;cursor:pointer;font-size:12px;border-bottom:1px solid #1f1d19}
+.modopt:last-child{border-bottom:0}
+.modopt:hover{background:#16140f}
+.modopt.on{background:rgba(255,71,0,.1);box-shadow:inset 3px 0 0 var(--accent)}
+.modopt .mon{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.moinfo{margin-left:auto;color:var(--muted);font-size:11px;white-space:nowrap}
+.wsectlbl{position:absolute;transform:translate(-50%,-50%);font-size:10px;font-weight:800;letter-spacing:1.5px;pointer-events:none;opacity:.8}
+.wsect-hi{color:#c0788a} .wsect-med{color:#6ba0c8} .wsect-low{color:#74b487} .wsect-engine{color:#c4ab66}
+.statbox{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:0;padding:10px 12px}
+.sbh{font-weight:700;font-size:13px;margin-bottom:8px;color:#fafae5}
+/* рецепт и характеристики — отдельные виджеты рядом */
+.detrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:12px}
+/* табы карточки предмета */
+.tabs{display:flex;gap:2px;margin-top:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-family:var(--font-mono);font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  padding:9px 16px;cursor:pointer;margin-bottom:-1px;transition:color .12s}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tabpanel[hidden]{display:none}
+.tabpanel{background:var(--panel);border:1px solid var(--line);padding:20px 24px;margin-top:14px}
+.tabpanel>:first-child{margin-top:0}
+.tabpanel .foldsec:first-child{margin-top:0}
+/* ── контент табов: ПЛОСКО, без рамок-обёрток; единые подзаголовки разделов ── */
+.tabpanel .foldsec,.tabpanel .statbox,.tabpanel .charspanel,.tabpanel .recipe,
+.tabpanel .facbox,.tabpanel .gsec,.tabpanel .blockwarn,.tabpanel .totals{border:0;background:none;padding:0}
+.tabpanel .foldsec{margin:22px 0 0}
+.tabpanel .gsec{margin:18px 0 0}
+.tabpanel .recipe{margin:0;max-width:560px}
+.tabpanel .sbh{display:none}                         /* дублирует имя таба */
+.tabpanel .foldsec>summary{pointer-events:none}       /* в табах не сворачиваем */
+.tabpanel .foldsec>summary::before{display:none}      /* без стрелки ▸ */
+.tabpanel .foldsec>:not(summary){margin:0}
+/* ЕДИНЫЙ подзаголовок раздела (везде одинаковый) */
+.tabpanel .foldsec>summary,.tabpanel .charsub,.tabpanel .gsech,.tabpanel .guideh,.tabpanel .subh{
+  font-family:var(--font-mono);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--accent);margin:18px 0 11px;padding:0}
+.tabpanel>:first-child.subh,.tabpanel .subh:first-child{margin-top:0}
+.tabpanel>.charspanel{margin-top:0}
+/* заголовок содержимого таба (его «подзаголовок раздела») */
+.tabhead{font-family:var(--font-mono);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--accent);margin:0 0 16px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+/* рецепт таблицей: слева подпись строки, справа содержимое (постройка / ингредиенты / результат) */
+.rpaths{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.rblock{display:grid;grid-template-columns:max-content 1fr;gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:4px}
+.rrlabel{background:var(--panel);display:flex;align-items:center;padding:12px 14px;font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);white-space:nowrap}
+.rrcontent{background:var(--panel);display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:11px 14px;min-width:0}
+.rfacchip{display:inline-flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);padding:6px 12px;cursor:pointer}
+.rfacchip:hover{border-color:var(--accent)}
+.rfacchip.on{border-color:var(--accent)}
+.rfacchip.rvar{gap:6px}
+.rfacchip.rvar>:last-child{opacity:.6;margin-left:2px}
+.rfacchip.rvar.on{background:rgba(255,122,60,.14)}
+.rblock .rfacchip:not(.on){opacity:.42}
+.rblock .rfacchip:not(.on):hover{opacity:1}
+.rfacchip.best .rfacnm::after{content:" ✓";color:var(--green);font-weight:700}
+.rfacnm{font-size:12px;color:var(--text)}
+.rtiles{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.rtile{display:flex;flex-direction:column;align-items:center;background:var(--panel2);border:1px solid var(--line);width:130px;box-sizing:border-box;text-align:center;cursor:pointer;overflow:hidden}
+.rtile:hover{border-color:var(--accent)}
+.rtile.prim{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.rtile .rtop{display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 10px 9px}
+.rtile .rnm{font-size:11px;line-height:1.3;color:var(--muted);min-height:2.6em}
+.rtile .rqf{width:100%;background:rgba(0,0,0,.4);border-top:1px solid var(--line);padding:7px 0;color:var(--gold);font-weight:700;font-size:16px;font-variant-numeric:tabular-nums}
+/* этап плана: заголовок (название + опц. кнопка справа) + колонка источника */
+.gsec .gsech{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.plantbl .psrc{white-space:nowrap;font-size:12px}
+.plantbl .psrc.mine{color:var(--gold)}
+.plantbl .psrc.loot{color:var(--violet)}
+/* переработка: из чего → получаем */
+.reschip{display:inline-flex;align-items:center;gap:5px;margin:2px 12px 2px 0;white-space:nowrap}
+.plantbl .pfrom2{line-height:2}
+.plantbl .parrow{color:var(--accent);font-weight:700;text-align:center;font-size:15px}
+.plantbl .pto{font-weight:600;color:var(--text)}
+.plantbl .pto .reschip.co{opacity:.65;font-weight:400}
+.cotag{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-left:4px}
+/* flow-граф производства (vanilla SVG) */
+.flowlegend{display:flex;align-items:center;gap:12px;font-size:11px;color:var(--muted);margin:2px 0 10px;font-family:var(--font-mono)}
+.flowfs{position:absolute;top:10px;right:10px;z-index:20;white-space:nowrap}
+.flowscroll:fullscreen{width:100vw;height:100vh;padding:0}
+.flowlegend .lgr,.flowlegend .lgf{display:inline-block;width:16px;height:11px;vertical-align:middle;background:var(--panel2);border:1px solid var(--line);margin-right:2px}
+.flowlegend .lgr{border-left:3px solid var(--gold)}
+.flowlegend .lgf{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.flowscroll{overflow:hidden;position:relative;max-width:100%;height:560px;border:1px solid var(--line);background:#0b0b09}
+.flowwrap{transform-origin:0 0}
+.flowwrap{position:relative}
+.flowsvg{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
+.flowband{position:absolute;top:0;z-index:0}
+.flowband.s0{background:rgba(255,182,81,.05)}
+.flowband.s1{background:rgba(255,122,60,.06)}
+.flowband.s2{background:rgba(120,140,170,.045)}
+.flowband.s3{background:rgba(255,71,0,.07)}
+.flowbandh{text-align:center;font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);padding:9px 4px 0;white-space:nowrap;overflow:hidden}
+.flowedge{fill:none;stroke:#3a362d;stroke-width:1.5}
+.flowedge.co{stroke:var(--violet);stroke-dasharray:5 4;opacity:.7}
+.flownode{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);padding:0 9px;cursor:grab;box-sizing:border-box;overflow:hidden;width:170px;height:54px}
+.flowwrap .flownode{position:absolute;z-index:2}
+.cytowrap .flownode{pointer-events:none}
+.flownode:hover{border-color:var(--accent);z-index:5}
+.flownode.raw{border-left:3px solid var(--gold)}
+.flownode.refine{border-left:3px solid var(--violet)}
+.flownode.final{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.flownode .fnbody{min-width:0}
+.flownode .fnname{font-size:10.5px;line-height:1.15;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:116px}
+.flownode .fnqty{font-size:12px;color:var(--gold);font-weight:700}
+.flownode .fnleft{color:#86c986;font-weight:600;font-size:10px;margin-left:3px}
+/* интерактив графа: пан / drag / подсветка цепочки */
+.flowscroll{cursor:grab}
+.flowscroll.grabbing{cursor:grabbing}
+.flownode{cursor:grab}
+.flownode.dim{opacity:.22}
+.flownode.hi{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);z-index:4}
+.flowedge.dim{opacity:.08}
+.flowedge.hi{stroke:var(--accent);stroke-width:2.2;opacity:1}
+/* Flow6 (Cytoscape dagre) */
+.cytowrap{height:560px;border:1px solid var(--line);background:#0b0b09;position:relative}
+/* Flow5 (D3 force-directed) */
+.d3wrap{height:560px;border:1px solid var(--line);background:#0b0b09;overflow:hidden;position:relative}
+.d3wrap svg{display:block;cursor:grab}
+.d3wrap svg:active{cursor:grabbing}
+.d3edge{transition:opacity .12s}
+.d3edge.dim{opacity:.1}
+.d3edge.hi{stroke:var(--accent)!important;stroke-width:2.4;opacity:1}
+/* связь астероид↔руда */
+.chiprow{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.minedrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+.minedrow .mlabel{font-family:monospace;font-size:12px;text-transform:uppercase;color:#8f8a76;letter-spacing:.04em}
+/* панель приоритета руд (этап «Добыча») — таблица */
+.oreshint{font-family:monospace;font-size:11px;color:#8f8a76;font-weight:400;text-transform:none;margin-left:10px}
+.orewarn{background:rgba(255,71,0,.12);border:1px solid var(--accent);color:#ffb39a;padding:8px 12px;margin:0 0 10px;font-size:13px}
+.oretbl{border-collapse:collapse;margin-top:8px;width:auto}
+.oretbl thead th{font-family:monospace;font-size:11px;color:#8f8a76;text-transform:uppercase;text-align:left;font-weight:400;padding:3px 14px 7px 6px;border-bottom:1px solid #3a362d}
+.oretbl thead th.ar{text-align:right}
+.oretbl td{padding:6px 14px 6px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+.oretbl tbody tr:nth-child(odd){background:rgba(255,255,255,.022)}
+.oretbl tbody tr.req{background:rgba(255,71,0,.15)}
+.oretbl tbody tr:hover{background:rgba(255,122,60,.09)}
+.orerow[draggable="true"]{cursor:grab}
+.orerow.dragging{opacity:.4;cursor:grabbing}
+.orerow.droptgt td{box-shadow:inset 0 2px 0 var(--gold)}
+.orerow.alt{opacity:.5}
+.orerow.alt:hover{opacity:.95}
+.orerow.off{opacity:.42}
+.orerow.off .orenm2{text-decoration:line-through}
+.orerow.req .orenm2{color:#ff7a3c;font-weight:600}
+.orerow.lootrow{opacity:.72}
+.orearr{white-space:nowrap;padding-right:2px!important}
+.orear{display:inline-block;background:none;border:1px solid var(--line);color:var(--text);width:22px;height:18px;line-height:1;font-size:8px;cursor:pointer;padding:0;margin:0 1px;vertical-align:middle}
+.orear:hover{border-color:var(--accent);color:var(--accent)}
+.orear.dis{opacity:.22;cursor:default;pointer-events:none}
+.orerank2{font-family:monospace;font-size:11px;color:#8f8a76;text-align:center}
+.oreic img,.oreic .ic{pointer-events:none}
+.orenm2{font-size:13px;color:var(--text)}
+.orest{font-size:14px;color:var(--gold);font-weight:700;text-align:right;font-family:monospace;white-space:nowrap;min-width:100px}
+.oretbl thead th.ar{min-width:100px}
+.orestock{color:#7ed87e;font-family:monospace;font-weight:600;font-size:13px;text-align:right;white-space:nowrap}
+.orest.alt{color:#8f8a76;font-weight:400;font-style:italic;font-size:12px}
+@keyframes noaltflash{0%{background:rgba(255,90,90,.45)}100%{background:transparent}}
+.orerow.noalt{animation:noaltflash .9s ease-out}
+.oretgbig{width:19px;height:19px;cursor:pointer;accent-color:var(--accent);margin:0}
+.orelim{white-space:nowrap}
+.limx{background:none;border:0;color:#8f8a76;font-size:14px;cursor:pointer;padding:0 2px;margin-left:3px;line-height:1}
+.limx:hover{color:var(--accent)}
+.presetdesc{font-family:monospace;font-size:11.5px;color:#9a9580;margin:6px 0 2px}
+.orepresets{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 6px}
+.presetbtn{background:var(--panel2);border:1px solid var(--line);color:#cfcab5;font-family:monospace;font-size:12px;padding:5px 11px;cursor:pointer}
+.presetbtn:hover{border-color:var(--accent);color:var(--text)}
+.presetbtn.on{background:var(--accent);border-color:var(--accent);color:#10100c;font-weight:700}
+.orelim{padding-right:6px!important}
+.orelimin{width:72px;background:#0b0b09;border:1px solid var(--line);color:var(--text);font-family:monospace;font-size:12px;padding:3px 6px;text-align:right;box-sizing:border-box}
+.orelimin:focus{border-color:var(--accent);outline:none}
+.orewarn.lim{background:rgba(255,150,40,.12);border-color:#ff9a3c;color:#ffcf9a}
+.havetd{padding-right:8px!important}
+.havein{width:60px;background:#0b0b09;border:1px solid var(--line);color:#86c986;font-family:monospace;font-size:12px;padding:3px 6px;text-align:right;box-sizing:border-box}
+.havein:focus{border-color:#86c986;outline:none}
+.havein::placeholder{color:#4a463c}
+.plantbl .havein{width:54px}
+/* блок 0 — склад (таблица) */
+.gsec.stock{margin-bottom:16px}
+.stocktbl{border-collapse:collapse;margin-top:8px}
+.stocktbl thead th{font-family:monospace;font-size:11px;color:#8f8a76;text-transform:uppercase;text-align:left;font-weight:400;padding:3px 14px 7px 4px;border-bottom:1px solid #3a362d}
+.stocktbl thead th.ar{text-align:right}
+.stocktbl thead th.sortable{cursor:pointer;user-select:none}
+.stocktbl thead th.sortable:hover{color:#cfcab5}
+.stocktbl thead th.sorted{color:var(--accent)}
+.stocktbl td{padding:6px 14px 6px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+.stocktbl td.ar{text-align:right}
+.strow:hover{background:rgba(255,122,60,.06)}
+.strow.off{opacity:.42}
+.strow.off .sqty{text-decoration:line-through}
+.snm{font-size:13px;color:var(--text)}
+.scm{font-size:12px;color:#9a9580;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.sqty{font-size:18px;color:var(--gold);font-weight:700;font-family:monospace;white-space:nowrap}
+.sact{white-space:nowrap;text-align:right}
+.sxb{display:inline-flex;align-items:center;justify-content:center;min-width:27px;height:25px;background:none;border:1px solid var(--line);color:#8f8a76;font-size:14px;cursor:pointer;padding:0 6px;margin-left:4px}
+.sxb svg{display:block}
+.sxb:hover{border-color:#6a6456;color:#cfcab5}
+.sxb.ed:hover{color:#ff7a3c;border-color:#ff7a3c}
+.sxb.eye:hover{color:#86c986;border-color:#86c986}
+.sxb.del:hover{color:#ff5a5a;border-color:#ff5a5a}
+.sxb.ok{color:var(--accent);border-color:var(--accent)}
+.sin{background:#0b0b09;border:1px solid var(--line);color:var(--text);font-family:monospace;font-size:13px;padding:4px 7px;box-sizing:border-box}
+.sin.qin{width:96px;text-align:right;color:var(--gold);font-weight:700;font-size:15px}
+.ssel{min-width:210px}
+.stocknote{margin-top:8px}
+.stockbar{display:flex;gap:8px;margin-top:10px}
+.picker{position:relative;display:inline-block}
+.pickbtn{display:flex;align-items:center;gap:6px;min-width:210px;max-width:280px;background:#0b0b09;border:1px solid var(--line);color:var(--text);font-family:monospace;font-size:13px;padding:4px 8px;cursor:pointer;text-align:left}
+.pickbtn:hover{border-color:var(--accent)}
+.pickbtn .pbnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pickmenu{display:none;position:absolute;top:calc(100% + 2px);left:0;z-index:60;min-width:250px;max-height:340px;overflow-y:auto;background:#15140f;border:1px solid var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.55)}
+.pickmenu.open{display:block}
+.pickgrp{font-family:monospace;font-size:10px;color:#ff7a3c;text-transform:uppercase;letter-spacing:.05em;padding:7px 9px 4px;background:#0e0d0a;border-bottom:1px solid #3a362d;position:sticky;top:0}
+.pickopt{display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text)}
+.pickopt:hover{background:rgba(255,122,60,.16)}
+.sxb.eyeoff{opacity:.45}
+.plantbl .pto .ic,.reschip .ic{vertical-align:middle}
+.rtime{font-size:12px;color:var(--muted);margin-left:4px}
+.rqty{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.rqty input{width:76px;padding:6px 8px}
+.charbody{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,420px));gap:6px 30px;align-items:start;margin-top:8px}
+.charsec{min-width:0}
+.charsec .stattbl{width:100%}
+.detrow>.foldsec,.detrow>.sec{flex:1 1 360px;margin-top:0;min-width:0}
+.detrow>.charspanel{flex:0 1 340px;min-width:240px}
+.charspanel{margin-top:0}
+.charspanel .charsub{font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.5px;
+  font-size:14px;color:var(--accent);margin:0 0 11px;font-weight:700}
+.charspanel .charsub:first-of-type{margin-top:0}
+.charspanel .stattbl{font-size:13.5px}
+.charspanel .stattbl td{padding:6px 10px}
+/* совместимость заряд↔модуль */
+.compatgrid{display:grid;grid-template-columns:1fr 1fr;gap:1px 20px}
+@media (max-width:760px){ .compatgrid{grid-template-columns:1fr} }
+.cmpli{display:flex;align-items:center;gap:8px;padding:5px 7px;cursor:pointer;min-width:0}
+.cmpli:hover{background:#16140f}
+.cmpli .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmpli .cgrp{margin-left:auto;color:var(--muted);font-size:10px;white-space:nowrap}
+.stattbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.stattbl td{padding:4px 6px;border-bottom:1px solid #1f1d19}
+.stattbl tr:last-child td{border-bottom:0}
+.stattbl .sl{color:var(--muted)}
+.stattbl .sv{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#e9e7d4}
+button.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-weight:500;font-size:12px;padding:7px 11px}
+.shiptbl td:not(.engnm){text-align:right;font-variant-numeric:tabular-nums}
+.shiptbl td.best{color:var(--green);font-weight:700}
+.shiptbl .engnm{white-space:nowrap}
+/* ── транспонированная сравнительная таблица: корабли в колонках ── */
+.cmpbar{display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap}
+.cmpdrop{position:relative}
+.cmpdrop>summary{cursor:pointer;list-style:none;background:var(--panel2);border:1px solid var(--line);
+  color:var(--text);font-size:12px;padding:7px 12px;font-family:var(--font-mono);user-select:none}
+.cmpdrop>summary::-webkit-details-marker{display:none}
+.cmpdrop[open]>summary{border-color:var(--accent);color:var(--accent)}
+.cmpdroppanel{position:absolute;top:calc(100% + 4px);left:0;z-index:30;background:#0d0d0b;border:1px solid var(--line);
+  min-width:220px;max-height:330px;overflow:auto;padding:4px;box-shadow:0 14px 32px rgba(0,0,0,.55)}
+.cmprow{display:flex;align-items:center;gap:8px;padding:5px 9px;cursor:pointer;font-size:12px;color:var(--text)}
+.cmprow:hover{background:rgba(255,71,0,.1)}
+.cmprow input{accent-color:var(--accent);cursor:pointer}
+.cmprow .cmpg{margin-left:auto;color:var(--muted);font-size:10.5px}
+.cmprow.allrow{border-bottom:1px solid var(--line);color:var(--accent);margin-bottom:3px;font-weight:600}
+
+.shipcmp{overflow:auto;margin-top:12px;border:1px solid var(--line);max-height:74vh}
+.cmpempty{padding:40px;text-align:center;color:var(--muted);font-family:var(--font-mono)}
+.shipcmptbl{border-collapse:separate;border-spacing:0;font-size:12px;background:var(--panel);min-width:100%}
+.shipcmptbl th,.shipcmptbl td{padding:6px 11px;border-bottom:1px solid #1f1d19;white-space:nowrap;
+  text-align:right;font-variant-numeric:tabular-nums}
+/* столбец показателей — заморожен слева */
+.shipcmptbl .statcol{position:sticky;left:0;z-index:2;text-align:left;color:#e9e7d4;
+  box-shadow:1px 0 0 var(--line);border-left:3px solid transparent}
+/* шапка с кораблями — заморожена сверху */
+.shipcmptbl thead .shipcol{position:sticky;top:0;z-index:1;background:#16140f;text-align:center;
+  min-width:82px;vertical-align:bottom;line-height:1.25}
+.shipcmptbl thead .corner{position:sticky;top:0;left:0;z-index:4;background:#16140f;border-left:0}
+.shipcol .shn{font-weight:700;margin-top:3px;color:#fff;font-family:var(--font-mono);font-size:11.5px}
+.shipcol .shg{font-size:9.5px;color:var(--muted)}
+.shipcol:hover{background:#221d15}
+/* фон по группам (вертикальная различимость) */
+.shipcmptbl .drow td{background-color:#141210}
+.shipcmptbl .drow.g0 td{background-color:rgba(255,138,77,.07)}
+.shipcmptbl .drow.g1 td{background-color:rgba(126,162,224,.075)}
+.shipcmptbl .drow.g2 td{background-color:rgba(196,154,232,.07)}
+.shipcmptbl .drow.g3 td{background-color:rgba(132,207,147,.07)}
+.shipcmptbl .drow.g4 td{background-color:rgba(234,187,102,.075)}
+/* статколонка непрозрачная + цветовой левый бар группы */
+.shipcmptbl .drow .statcol{background-color:#141210}
+.shipcmptbl .drow.g0 .statcol{border-left-color:#ff8a4d}
+.shipcmptbl .drow.g1 .statcol{border-left-color:#7ea2e0}
+.shipcmptbl .drow.g2 .statcol{border-left-color:#c49ae8}
+.shipcmptbl .drow.g3 .statcol{border-left-color:#84cf93}
+.shipcmptbl .drow.g4 .statcol{border-left-color:#eabb66}
+/* зебра — тёмный оверлей поверх группового фона */
+.shipcmptbl .drow.z td{background-image:linear-gradient(rgba(0,0,0,.26),rgba(0,0,0,.26))}
+.shipcmptbl .drow:hover td{background-image:linear-gradient(rgba(255,71,0,.11),rgba(255,71,0,.11))}
+/* группы-бэнды */
+.grpband td{background:#1c170f;border-top:1px solid var(--line)}
+.grpband .statcol{background:#1c170f;text-transform:uppercase;font-size:10.5px;letter-spacing:.5px;font-weight:700;border-left:3px solid}
+.grpband.b0 .statcol{color:#ff8a4d;border-left-color:#ff8a4d}
+.grpband.b1 .statcol{color:#7ea2e0;border-left-color:#7ea2e0}
+.grpband.b2 .statcol{color:#c49ae8;border-left-color:#c49ae8}
+.grpband.b3 .statcol{color:#84cf93;border-left-color:#84cf93}
+.grpband.b4 .statcol{color:#eabb66;border-left-color:#eabb66}
+.shipcmptbl td.best{color:var(--green);font-weight:700}
+.shipcmptbl .stat{cursor:pointer}
+.shipcmptbl .stat:hover{color:#fff}
+.shipcmptbl .stat.sorton{color:var(--accent)}
+
+/* summary cards */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:980px){.cards{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:0;padding:12px 14px}
+.card h4{margin:0 0 8px;font-size:13px}
+.card.raw h4{color:var(--gold)} .card.inter h4{color:var(--accent)}
+.li{display:flex;align-items:center;gap:9px;padding:4px 0;border-bottom:1px solid #1f1d19}
+.li:last-child{border-bottom:0}
+.li .q{min-width:64px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.li .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .sub{font-size:11px;color:var(--muted)}
+.totals{margin-top:10px;padding:10px 12px;background:#100f0d;border:1px solid var(--line);border-radius:0;font-size:13px}
+.totals b{color:#fff}
+
+/* tree */
+.tree{font:14px/1.85 "Cascadia Mono","Consolas",monospace}
+.tree details{margin-left:18px;border-left:1px solid #34302a;padding-left:16px}
+.tree summary{cursor:pointer;list-style:none}
+.tree summary::-webkit-details-marker{display:none}
+.tnode{display:inline-flex;align-items:center;gap:9px;padding:5px 0}
+.tnode .q{color:#e9e7d4;font-weight:700}
+.tnode.rawn .nm{color:var(--gold)}
+.refnote{font-size:12px;color:var(--muted);margin-left:8px}
+
+.empty{color:var(--muted);padding:40px;text-align:center}
+.note{font-size:11px;color:var(--muted);margin-top:4px}
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#2a2823;border-radius:0}
+::-webkit-scrollbar-thumb:hover{background:#3a382f}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ── тема EVE Frontier: моноширинный «технический» chrome ── */
+.title,.logo,.navlink,.dname,.sec h3,.gsech,.guideh,.foldsec>summary,.catname,.cathead,.crumb,.crumbsep{font-family:var(--font-mono)}
+.title{letter-spacing:.5px;text-transform:uppercase}
+.navlink{text-transform:uppercase;letter-spacing:.6px;font-size:12px}
+.sec h3,.gsech,.guideh{text-transform:uppercase;letter-spacing:.6px}
+input,select,button{font-family:var(--font-mono)}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px rgba(255,71,0,.35)}
+::selection{background:rgba(255,71,0,.32);color:#0b0b0b}
+
+/* ── аккуратные ховеры + плавные переходы (в духе EVE) ── */
+a,button,.row,.tilecard,.catrow,.navlink,.crumb,.facchip,.modchip,.faccheck,.pathtab,.vbtn,
+.li,.gli,.modopt,.recipe .out,.recipe .ing,.tpath,.foldsec>summary,.linkbtn,.sec-btn,.ghost{
+  transition:background-color .14s ease,color .14s ease,border-color .14s ease,box-shadow .14s ease,transform .12s ease,filter .14s ease}
+a:hover{color:var(--accent)}
+button:hover{filter:brightness(1.08)}
+button:active{transform:translateY(1px)}
+.sec-btn:hover,.ghost:hover,.linkbtn:hover{border-color:rgba(255,71,0,.55);color:#ff7a3c;background:#191510}
+.row:hover{box-shadow:inset 2px 0 0 rgba(255,71,0,.55)}
+.tilecard:hover{border-color:rgba(255,71,0,.5);transform:translateY(-1px)}
+.catrow:hover{box-shadow:inset 2px 0 0 rgba(255,71,0,.45)}
+.navlink:not(.dis):hover{color:var(--accent)}
+.crumb:not(.cur):hover{color:#ff7a3c;text-decoration:none;text-shadow:0 0 9px rgba(255,71,0,.45)}
+.facchip:hover,.modchip:hover{border-color:rgba(255,71,0,.55);color:#ff7a3c}
+.recipe .out:hover{color:var(--accent)}
+.recipe .ing:hover,.li:hover,.gli:hover{background:rgba(255,71,0,.05)}
+.modopt:hover,.pathtab:hover{border-color:rgba(255,71,0,.4)}
+.vbtn:hover{color:var(--text);border-color:rgba(255,71,0,.45)}
+.foldsec>summary:hover{color:var(--accent)}
+.faccheck:hover{border-color:rgba(255,71,0,.4)}
+.facchip,.modchip,.tilecard,.row,.catrow,.li,.gli,.recipe .ing,.recipe .out{cursor:pointer}
+
+/* ── контент: просторнее, крупнее заголовки/иконки, аккуратные таблицы ── */
+.detail{padding:26px 32px}
+.dhead{gap:18px;padding:14px 0 16px;margin-bottom:6px;position:static}
+.dname{font-size:27px;letter-spacing:.5px;line-height:1.1}
+.dmeta{font-size:12.5px;margin-top:6px}
+.badge{padding:3px 9px}
+.sec{margin-top:26px}
+.sec h3{font-size:15px;letter-spacing:.7px;margin-bottom:12px}
+.guideh{font-size:16px;letter-spacing:.7px}
+.foldsec{margin-top:16px}
+.foldsec>summary{font-size:14px;padding:13px 16px}
+.foldsec>:not(summary){margin:0 16px 16px}
+/* рецепт-карточка */
+.recipe{padding:18px 20px;margin-bottom:14px}
+.recipe .out{padding:6px 0;gap:11px;font-size:15px}
+.recipe .arrow{margin:13px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+.ing{padding:9px 0;gap:11px;border-bottom:1px solid #1f1d19}
+.ing:last-child{border-bottom:0}
+.ing .q{min-width:62px;font-size:14px}
+.ing .nm{font-size:14px}
+.facrow{margin-top:14px;padding-top:12px}
+/* пошаговый план */
+.guide{gap:12px}
+.gsec{padding:15px 17px;border-left-width:4px}
+.gsech{font-size:14px;margin-bottom:11px}
+.gli{padding:8px 0;gap:10px}
+.gli .q{min-width:56px;font-size:14px}
+.gli .nm{font-size:13.5px}
+.planbar{margin:10px 0 18px}
+.totals{padding:13px 15px;font-size:13.5px;margin-top:14px}
+/* крупные иконки предметов — в рамке, как в игре */
+.dhead>.ic,.dhead>.ph{border:1px solid rgba(255,71,0,.35);box-shadow:0 0 16px rgba(255,71,0,.12);background:#0d0d0b;box-sizing:content-box;padding:9px}
+.ing>.ic,.ing>.ph,.recipe .out>.ic,.recipe .out>.ph,.gli>.ic,.gli>.ph,.li>.ic,.li>.ph,.plantbl .pic>.ic,.plantbl .pic>.ph{border:1px solid var(--line);background:#0d0d0b;box-sizing:content-box;padding:5px}
+/* аккуратные таблицы */
+.ptbl{font-size:13px}
+.ptbl th{padding:11px 13px;font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-family:var(--font-mono);color:var(--muted)}
+.ptbl td{padding:11px 13px}
+.ptbl .cell{gap:7px;padding:2px 0}
+.stattbl td,.shiptbl td,.slottbl td{padding:8px 10px}
+
+/* таблицы пошагового плана */
+.plantbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:2px}
+.plantbl thead th{text-align:left;color:var(--muted);font-weight:600;font-size:10px;letter-spacing:.5px;
+  text-transform:uppercase;font-family:var(--font-mono);padding:4px 10px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+.plantbl th.ar{text-align:right}
+.plantbl td{padding:8px 10px;border-bottom:1px solid #1f1d19;vertical-align:middle}
+.plantbl tr:last-child td{border-bottom:0}
+.plantbl tr.prow{cursor:pointer;transition:background-color .12s ease}
+.plantbl tr.prow:hover{background:rgba(255,71,0,.05)}
+.plantbl .pic{width:1px;white-space:nowrap;padding-right:6px}
+.plantbl .pnm{font-weight:600;white-space:nowrap}
+.plantbl .pnum{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.plantbl .pruns{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.plantbl .ptime{text-align:right;font-variant-numeric:tabular-nums;color:#ffb38a;white-space:nowrap}
+.plantbl .pfac{color:var(--muted);font-size:12px;white-space:nowrap}
+.plantbl .pfrom{color:var(--muted);font-size:11.5px;line-height:1.4;min-width:150px}

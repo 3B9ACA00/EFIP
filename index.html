@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EF Industry — EVE Frontier</title>
+  <link rel="stylesheet" href="styles.css?v=122" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">EF</span>
+      <div>
+        <div class="title">Industry</div>
+        <div class="sub" data-i18n="EVE Frontier — крафт и ресурсы">EVE Frontier — crafting &amp; resources</div>
+      </div>
+    </div>
+    <nav class="topnav">
+      <span class="navlink active" data-i18n="Промышленность">Industry</span>
+      <span class="navlink dis" data-i18n-title="скоро" data-i18n="Рынок">Market</span>
+      <span class="navlink dis" data-i18n-title="скоро" data-i18n="Карта">Map</span>
+      <span class="navlink dis" data-i18n-title="скоро" data-i18n="Логистика">Logistics</span>
+    </nav>
+    <div class="langsw" id="langsw">
+      <button data-lang="en">EN</button>
+      <button data-lang="ru">RU</button>
+    </div>
+  </header>
+
+  <div class="subbar">
+    <input id="gsearch" type="search" class="bigsearch" data-i18n-ph="Поиск по всем предметам — название или id…" placeholder="Search all items — name or id…" autocomplete="off" />
+    <nav id="crumbs" class="crumbs"></nav>
+    <button id="cmpShips" class="ghost" data-i18n-title="Сравнить все корабли" data-i18n="⚖ Корабли">⚖ Ships</button>
+  </div>
+
+  <main>
+    <aside id="cats" class="cats"></aside>
+    <aside class="itemcol">
+      <div class="itemhead">
+        <input id="search" type="search" data-i18n-ph="Поиск в категории…" placeholder="Search in category…" autocomplete="off" />
+        <label class="chk"><input type="checkbox" id="onlyCraft" /> <span data-i18n="крафт">craft</span></label>
+        <div class="viewtoggle" role="group" aria-label="View">
+          <button id="viewTile" class="vbtn" data-i18n-title="Плитка" title="Tiles">▦</button>
+          <button id="viewList" class="vbtn" data-i18n-title="Список" title="List">≡</button>
+        </div>
+      </div>
+      <div id="list" class="list"></div>
+      <div id="stat" class="stat"></div>
+    </aside>
+    <section id="detail" class="detail">
+      <div class="empty" data-i18n="Выбери предмет — покажу рецепт и пошаговый план.">Pick an item — I'll show the recipe and step-by-step plan.</div>
+    </section>
+  </main>
+
+  <!-- вендор: vanilla flow-движки (для вкладок Flow2/Flow3) -->
+  <script src="vendor/cytoscape.min.js"></script>
+  <script src="vendor/cytoscape-node-html-label.min.js"></script>
+  <script src="vendor/dagre.min.js"></script>
+  <script src="vendor/cytoscape-dagre.js"></script>
+  <script src="vendor/d3.v7.min.js"></script>
+  <script src="vendor/lp-solver.js"></script>
+  <!-- модули (классические скрипты, общий scope; порядок: фундамент → логика → UI → bootstrap) -->
+  <script src="js/core.js?v=122"></script>
+  <script src="js/lp.js?v=122"></script>
+  <script src="js/plan.js?v=122"></script>
+  <script src="js/detail.js?v=122"></script>
+  <script src="js/fit.js?v=122"></script>
+  <script src="js/compare.js?v=122"></script>
+  <script src="js/renderplan.js?v=122"></script>
+  <script src="js/graph.js?v=122"></script>
+  <script src="js/cytoflow.js?v=122"></script>
+  <script src="js/d3flow.js?v=122"></script>
+  <script src="js/main.js?v=122"></script>
+</body>
+</html>
