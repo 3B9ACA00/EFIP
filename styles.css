@@ -787,22 +787,34 @@ button:active{transform:translateY(1px)}
 .plantbl .pfrom{color:var(--muted);font-size:11.5px;line-height:1.4;min-width:150px}
 
 /* ── Раздел «Список крафта» (js/list.js) ── */
-#navlist{cursor:pointer}
-.listhead .addlistbtn{margin-left:6px}
-.listtbl{border-collapse:collapse;margin:8px 0 14px;font-size:13px;max-width:560px}
-.listtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-bottom:1px solid rgba(255,255,255,.1)}
-.listtbl th.lqty,.listtbl th.lact{text-align:center}
-.listtbl td{padding:3px 8px;vertical-align:middle;border:0}
-.listtbl tr.zeb td{background:rgba(255,255,255,.035)}
+.addlistbtn{margin-left:6px}
+.listtbl{table-layout:fixed;width:100%;max-width:600px;border-collapse:collapse;margin:8px 0 14px;font-size:13px}
+.listtbl th{color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}
+.listtbl th.lnum,.listtbl th.lqty,.listtbl th.lact{text-align:center}
+.listtbl td{padding:0 8px;vertical-align:middle;border:0;overflow:hidden}
+.listtbl tbody tr{height:44px}
+.listtbl tr.zeb td{background:rgba(255,255,255,.04)}
 .listtbl tr.off td{opacity:.4}
 .listtbl tr.off .lnm{text-decoration:line-through}
-.listtbl .lnum{color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;width:22px}
-.listtbl .lname{display:flex;align-items:center;gap:8px;white-space:nowrap;max-width:280px}
-.listtbl .lname .lnm{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.listtbl .lnum{color:var(--muted);font-variant-numeric:tabular-nums;text-align:center}
+.listtbl .lname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.listtbl .lname .lic{display:inline-flex;vertical-align:middle;margin-right:8px;cursor:pointer}
+.listtbl .lname .lnm{font-weight:600;vertical-align:middle;cursor:pointer}
 .listtbl .lqty{text-align:center}
-.listtbl .qstep{display:inline-flex;align-items:center;gap:2px}
-.listtbl .lqty input{width:46px;text-align:center;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:5px;color:inherit;padding:2px 3px}
-.listtbl .lact{white-space:nowrap;text-align:right}
-.listtbl .lact .sxb{margin-left:1px}
+.listtbl .qstep{display:inline-flex;align-items:center;gap:4px;justify-content:center}
+.listtbl .lstep{width:26px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:18px;line-height:1;border:1px solid rgba(255,255,255,.18);border-radius:6px;background:rgba(255,255,255,.05);color:inherit;cursor:pointer;padding:0;user-select:none}
+.listtbl .lstep:hover{background:rgba(255,255,255,.13)}
+.listtbl .lqin{width:52px;height:30px;text-align:center;font-size:15px;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:inherit;padding:0 4px;box-sizing:border-box;-moz-appearance:textfield}
+.listtbl .lqin::-webkit-outer-spin-button,.listtbl .lqin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.listtbl .lact{text-align:center;white-space:nowrap}
+.listtbl .lact .sxb{width:26px;height:26px;margin:0 1px}
 .listtbl .sxb.eye.eyeoff{color:#e0a93a}
 .listplan{margin-top:4px}
+/* лого EFIP + кнопка Craft List в подшапке + раздел Cycle 6 */
+.brand .brandtext .title{font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.05}
+.brand .brandtext .sub{font-size:10.5px;letter-spacing:.02em;opacity:.7;text-transform:lowercase}
+#navlist{cursor:pointer}
+#navlist.active{border-color:var(--accent,#ff6a3d);color:var(--accent,#ff6a3d)}
+.cycle6box{padding:60px 20px;text-align:center;color:var(--muted)}
+.cycle6box .dname{font-size:26px;font-weight:800;margin-bottom:10px;color:inherit}
+.cycle6box .cycle6msg{font-size:14px}

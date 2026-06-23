@@ -124,6 +124,7 @@ async function boot(){
   function parseH(){
     const h=(location.hash||"").replace("#","");
     if(h==="ships") return {ships:true};
+    if(h==="cycle6") return {cycle6:true};
     const lm=h.match(/^list(?:=(.*))?$/); if(lm) return {list:true, raw:lm[1]};   // raw=undefined для «#list» без «=»
     const f=h.match(/^fit-(\d+)$/); if(f) return {fit:+f[1]};
     const m=h.match(/^(\d+)(?:x(\d+))?$/);
@@ -132,9 +133,12 @@ async function boot(){
   // список крафта: бэкап из localStorage (для счётчика навигации); хеш #list перекроет в dispatch
   try{ craftList = (JSON.parse(localStorage.getItem("ef_craftlist")||"[]")||[]).filter((x)=> x && T[x.id]); }catch(e){}
   const nl = $("#navlist"); if(nl) nl.onclick = ()=>{ location.hash = "#"+listHash(); };
+  const c6b = $("#navc6"); if(c6b) c6b.onclick = ()=> showCycle6();
+  const c5b = $("#navc5"); if(c5b) c5b.onclick = ()=>{ const def=(selected!=null&&T[selected])?selected:(DATA.recipes.flatMap((r)=>r.out.map((o)=>o.id)).find((id)=>ty(id).cat==="Ship")); if(def) showDetail(def); };
   updateListNav();
   const ph = parseH();
-  if(ph.list){ enterList(ph.raw); showList(); }
+  if(ph.cycle6){ showCycle6(); }
+  else if(ph.list){ enterList(ph.raw); showList(); }
   else if(ph.ships){ selectedCat="Ship"; renderCats(); renderItems(); shipsCompare(); renderCrumbs(); }
   else if(ph.fit && T[ph.fit]){ showFit(ph.fit); }
   else if(ph.id && T[ph.id]){ showDetail(ph.id, ph.qty); }
@@ -144,7 +148,8 @@ async function boot(){
   }
   window.addEventListener("hashchange", ()=>{
     const p = parseH();
-    if(p.list){ enterList(p.raw); showList(); }
+    if(p.cycle6){ showCycle6(); }
+    else if(p.list){ enterList(p.raw); showList(); }
     else if(p.ships){ selectedCat="Ship"; renderCats(); renderItems(); shipsCompare(); renderCrumbs(); }
     else if(p.fit && T[p.fit]){ if(!(selected===p.fit && fitMode)) showFit(p.fit); }
     else if(p.id && T[p.id]){ if(!(selected===p.id && !fitMode)) showDetail(p.id, p.qty); }

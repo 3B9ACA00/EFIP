@@ -29,10 +29,12 @@ function enterList(raw){
 }
 
 function updateListNav(){
-  const a = document.getElementById("navlist"); if(!a) return;
-  const n = listCount();
-  a.textContent = i18n("📋 Список") + (n ? (" ("+n+")") : "");
-  a.classList.toggle("active", !!listMode);
+  const a = document.getElementById("navlist");
+  if(a){ const n = listCount(); a.textContent = i18n("📋 Список крафтов") + (n ? (" ("+n+")") : ""); a.classList.toggle("active", !!listMode); }
+  // циклы в шапке: Cycle 6 активен только в своём (пустом) разделе
+  const e5 = document.getElementById("navc5"), e6 = document.getElementById("navc6");
+  if(e5) e5.classList.toggle("active", !cycle6Mode);
+  if(e6) e6.classList.toggle("active", !!cycle6Mode);
 }
 
 // ── мутации списка ──
@@ -44,7 +46,21 @@ function addToList(id, qty){
   if(listMode) showList();
 }
 function removeFromList(id){ craftList = craftList.filter((x)=>x.id!==id); saveCraftList(); showList(); }
-function setListQty(id, qty){ const e = craftList.find((x)=>x.id===id); if(!e) return; e.qty = Math.max(1, qty||1); saveCraftList(); showList(); }
+function setListQty(id, qty){
+  const e = craftList.find((x)=>x.id===id); if(!e) return;
+  e.qty = Math.max(1, qty||1);
+  saveCraftList();
+  history.replaceState(null, "", "#"+listHash());
+  const inp = document.querySelector('.listtbl tr[data-id="'+id+'"] .lqin');   // синхронизируем поле (если степпер)
+  if(inp && (parseInt(inp.value)||0)!==e.qty) inp.value = String(e.qty);
+  rerenderListPlan();   // план — дебаунсом, без перерисовки таблицы (не дёргается)
+}
+let _listPlanT = null;
+function rerenderListPlan(){
+  updateListNav();
+  if(_listPlanT) clearTimeout(_listPlanT);
+  _listPlanT = setTimeout(()=>{ const host=document.getElementById("listplanhost"); if(!host) return; buildListRoot(); renderPlan(LIST_ROOT, 1, host); }, 220);
+}
 function clearList(){ confirmModal(i18n("Очистить весь список крафта?"), ()=>{ craftList = []; saveCraftList(); showList(); }); }
 
 // синтетический рецепт: входы = предметы списка → renderPlan сводит весь BOM
@@ -57,7 +73,7 @@ function buildListRoot(){
 
 // ── рендер раздела ──
 function showList(){
-  listMode = true; selected = null; fitMode = false;
+  listMode = true; cycle6Mode = false; selected = null; fitMode = false;
   const wantHash = "#" + listHash();
   if(location.hash !== wantHash) history.replaceState(null, "", wantHash);   // permalink: URL всегда отражает список
   saveCraftList(); updateListNav(); renderCrumbs();
@@ -81,26 +97,27 @@ function showList(){
     d.scrollTop = sc; return;
   }
 
-  // — предметы списка: компактная таблица (#, предмет, кол-во, вкл/выкл, удалить), зебра —
+  // — предметы списка: таблица с ФИКСИРОВАННОЙ сеткой (colgroup+table-layout:fixed → не прыгает), зебра —
   const tbl = el("table","listtbl");
+  const cg = el("colgroup"); ["34px","auto","128px","62px"].forEach((w)=>{ const c=el("col"); c.style.width=w; cg.appendChild(c); }); tbl.appendChild(cg);
   const thd = el("thead"); thd.appendChild(el("tr", null,
     "<th class='lnum'>#</th><th class='lname'>"+esc(i18n("Предмет"))+"</th><th class='lqty'>"+esc(i18n("Кол-во"))+"</th><th class='lact'></th>"));
   tbl.appendChild(thd);
   const tb = el("tbody");
   craftList.filter((x)=>x.qty>0).forEach((x, i)=>{
     const off = !!x.off;
-    const tr = el("tr","litem"+(i%2?" zeb":"")+(off?" off":""));
+    const tr = el("tr","litem"+(i%2?" zeb":"")+(off?" off":"")); tr.dataset.id = x.id;
     tr.appendChild(el("td","lnum", String(i+1)));
     const nmtd = el("td","lname");
-    const ic = el("span","lic"); ic.style.cursor="pointer"; ic.onclick=()=>showDetail(x.id); ic.appendChild(icon(x.id,28)); nmtd.appendChild(ic);
-    const nm = el("span","lnm", esc(ty(x.id).name)); nm.style.cursor="pointer"; nm.onclick=()=>showDetail(x.id); nmtd.appendChild(nm);
+    const ic = el("span","lic"); ic.onclick=()=>showDetail(x.id); ic.appendChild(icon(x.id,28)); nmtd.appendChild(ic);
+    const nm = el("span","lnm", esc(ty(x.id).name)); nm.onclick=()=>showDetail(x.id); nmtd.appendChild(nm);
     if(!isCraftable(x.id)) nmtd.appendChild(el("span","tag raw"," "+i18n("сырьё")));
     tr.appendChild(nmtd);
     const qtd = el("td","lqty");
     const qb = el("div","qstep");
-    const dec = el("button","pstep"); dec.type="button"; dec.textContent="−"; dec.title=i18n("Меньше"); dec.onclick=()=>setListQty(x.id, x.qty-1);
-    const inp = el("input"); inp.type="number"; inp.min="1"; inp.value=String(x.qty); inp.onchange=()=>setListQty(x.id, parseInt(inp.value)||1);
-    const inc = el("button","pstep"); inc.type="button"; inc.textContent="+"; inc.title=i18n("Больше"); inc.onclick=()=>setListQty(x.id, x.qty+1);
+    const inp = el("input","lqin"); inp.type="number"; inp.min="1"; inp.value=String(x.qty); inp.onchange=()=>setListQty(x.id, parseInt(inp.value)||1);
+    const dec = el("button","lstep"); dec.type="button"; dec.textContent="−"; dec.title=i18n("Меньше"); dec.onclick=()=>setListQty(x.id, (parseInt(inp.value)||1)-1);
+    const inc = el("button","lstep"); inc.type="button"; inc.textContent="+"; inc.title=i18n("Больше"); inc.onclick=()=>setListQty(x.id, (parseInt(inp.value)||1)+1);
     qb.appendChild(dec); qb.appendChild(inp); qb.appendChild(inc); qtd.appendChild(qb); tr.appendChild(qtd);
     const atd = el("td","lact");
     const eye = el("button","sxb eye"+(off?" eyeoff":"")); eye.innerHTML=ICO_EYE; eye.title=off?i18n("Учитывать в крафте"):i18n("Не учитывать в крафте"); eye.onclick=()=>toggleListOff(x.id);
@@ -113,7 +130,19 @@ function showList(){
 
   // — агрегированный план: переиспользуем renderPlan через виртуальный корень —
   buildListRoot();
-  const planHost = el("div","listplan"); d.appendChild(planHost);
+  const planHost = el("div","listplan"); planHost.id="listplanhost"; d.appendChild(planHost);
   renderPlan(LIST_ROOT, 1, planHost);
   d.scrollTop = sc;
+}
+
+// ── Cycle 6 — пустой раздел (заглушка) ──
+function showCycle6(){
+  listMode=false; cycle6Mode=true; selected=null; fitMode=false;
+  if(location.hash!=="#cycle6") history.replaceState(null,"","#cycle6");
+  const d=$("#detail"); d.innerHTML="";
+  const box=el("div","cycle6box");
+  box.appendChild(el("div","dname","Cycle 6"));
+  box.appendChild(el("div","cycle6msg", i18n("Раздел Cycle 6 — скоро. Пока пусто.")));
+  d.appendChild(box);
+  updateListNav(); renderCrumbs();
 }

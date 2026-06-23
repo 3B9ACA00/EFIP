@@ -5,7 +5,7 @@ function showDetail(id, qtyOverride){
     const f = document.getElementById("qty");
     if(f && selected === id) qtyOverride = Math.max(1, parseInt(f.value)||1);
   }
-  selected = id; fitMode = false; listMode = false; updateListNav();
+  selected = id; fitMode = false; listMode = false; cycle6Mode = false; updateListNav();
   const wantHash = "#" + id + (qtyOverride > 1 ? ("x"+qtyOverride) : "");
   if(location.hash !== wantHash) location.hash = wantHash;   // ссылку можно скинуть другому игроку
   syncSidebarTo(id);
