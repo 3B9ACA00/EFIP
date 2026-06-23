@@ -150,7 +150,7 @@ function renderPlan(id, qty, host){
   const stockSec=(its)=>{
     const sk=curStock();   // активный склад: общий или локальный для этого предмета
     const grpOf=(it)=> !isCraftable(it) ? 0 : (isRefineStep(it) ? 1 : 2);   // 0 руда/лут · 1 рефайн · 2 крафт
-    const res=allBomItems(id).filter((it)=> it!==id);   // стабильный набор (по всем рецептам), чтобы строки не скакали при правке склада
+    const res=allBomItems(id).filter((it)=> it!==id && ty(it).cat!=="Deployable");   // стабильный набор; Deployable (постройки) не складируются
     const filledIds=Object.keys(sk).map(Number).filter((k)=> sk[k] && (sk[k].qty>0 || sk[k].inf));
     const nFilled=filledIds.length;
     const det=el("details","gsec stock");
@@ -357,7 +357,7 @@ function renderPlan(id, qty, host){
 
   const tot = el("div","totals",
     (id===LIST_ROOT
-      ? i18n("Список: <b>{n} предметов</b> &nbsp;·&nbsp; ⛏ руда: <b>{ore} м³</b>", {n:listCount(), ore:num(rawVol)})
+      ? i18n("Список: <b>{n} предметов</b> &nbsp;·&nbsp; ⛏ руда: <b>{ore} м³</b>", {n:listActiveCount(), ore:num(rawVol)})
       : i18n("Цель: <b>{q} × {name}</b> &nbsp;·&nbsp; ⛏ руда: <b>{ore} м³</b>", {q:num(qty), name:esc(ty(id).name), ore:num(rawVol)})) +
     (hasLoot ? i18n(" &nbsp;·&nbsp; <span class=\"lootw\">🎁 лут: {v} м³</span>", {v:num(lootVol)}) : ``) +
     i18n(" &nbsp;·&nbsp; время: <b>{time}</b>", {time:fmtTime(totalTime)}));

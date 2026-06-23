@@ -9,14 +9,16 @@ function listCount(){ return craftList.reduce((s,x)=>s+(x.qty>0?1:0),0); }
 
 // компактная сериализация в URL: #list=id[xqty].id[xqty]…  (qty опускается при 1)
 function listHash(){
-  const toks = craftList.filter((x)=>x.qty>0).map((x)=> x.qty>1 ? (x.id+"x"+x.qty) : String(x.id));
+  const toks = craftList.filter((x)=>x.qty>0).map((x)=> (x.off?"-":"") + (x.qty>1 ? (x.id+"x"+x.qty) : String(x.id)));
   return "list" + (toks.length ? "="+toks.join(".") : "");
 }
+function listActiveCount(){ return craftList.reduce((s,x)=>s+((x.qty>0 && !x.off)?1:0),0); }   // учитываемых в крафте (для итогов плана)
+function toggleListOff(id){ const e=craftList.find((x)=>x.id===id); if(!e) return; e.off=!e.off; saveCraftList(); showList(); }
 function parseCraftList(raw){
   return String(raw||"").split(".").map((tok)=>{
-    const m = tok.match(/^(\d+)(?:x(\d+))?$/); if(!m) return null;
-    const id = +m[1]; if(!T[id]) return null;
-    return { id, qty: Math.max(1, m[2] ? +m[2] : 1) };
+    const m = tok.match(/^(-)?(\d+)(?:x(\d+))?$/); if(!m) return null;   // «-» префикс = выключен (не учитывать в крафте)
+    const id = +m[2]; if(!T[id]) return null;
+    return { id, qty: Math.max(1, m[3] ? +m[3] : 1), off: !!m[1] };
   }).filter(Boolean);
 }
 // войти в список из URL/permalink: raw==null (хеш «#list» без «=») → берём текущий/localStorage; иначе парсим
@@ -47,7 +49,7 @@ function clearList(){ confirmModal(i18n("Очистить весь список 
 
 // синтетический рецепт: входы = предметы списка → renderPlan сводит весь BOM
 function buildListRoot(){
-  const items = craftList.filter((x)=>x.qty>0).map((x)=>({ id:x.id, q:x.qty }));
+  const items = craftList.filter((x)=>x.qty>0 && !x.off).map((x)=>({ id:x.id, q:x.qty }));   // выключенные (off) в расчёт не идут
   T[LIST_ROOT] = { id:LIST_ROOT, name:i18n("📋 Список крафта"), cat:"Unknown", grp:"", vol:0, mass:0, icon:0 };
   byOut[LIST_ROOT] = items.length ? [{ bp:LIST_ROOT, inp:items, out:[{ id:LIST_ROOT, q:1 }], rt:0, fac:[] }] : [];
   resetCost();
@@ -79,22 +81,35 @@ function showList(){
     d.scrollTop = sc; return;
   }
 
-  // — предметы списка: иконка · имя · степпер кол-ва · удалить —
-  const lt = el("div","listitems");
-  craftList.forEach((x)=>{
-    const row = el("div","litem");
-    const ic = el("span","lic"); ic.style.cursor="pointer"; ic.onclick=()=>showDetail(x.id); ic.appendChild(icon(x.id,36)); row.appendChild(ic);
-    const nm = el("span","lnm", esc(ty(x.id).name)); nm.style.cursor="pointer"; nm.onclick=()=>showDetail(x.id); row.appendChild(nm);
-    if(!isCraftable(x.id)) nm.appendChild(el("span","tag raw"," "+i18n("сырьё")));
-    const qb = el("div","lqty");
-    const dec = el("button","pstep"); dec.type="button"; dec.textContent="−"; dec.onclick=()=>setListQty(x.id, x.qty-1);
+  // — предметы списка: компактная таблица (#, предмет, кол-во, вкл/выкл, удалить), зебра —
+  const tbl = el("table","listtbl");
+  const thd = el("thead"); thd.appendChild(el("tr", null,
+    "<th class='lnum'>#</th><th class='lname'>"+esc(i18n("Предмет"))+"</th><th class='lqty'>"+esc(i18n("Кол-во"))+"</th><th class='lact'></th>"));
+  tbl.appendChild(thd);
+  const tb = el("tbody");
+  craftList.filter((x)=>x.qty>0).forEach((x, i)=>{
+    const off = !!x.off;
+    const tr = el("tr","litem"+(i%2?" zeb":"")+(off?" off":""));
+    tr.appendChild(el("td","lnum", String(i+1)));
+    const nmtd = el("td","lname");
+    const ic = el("span","lic"); ic.style.cursor="pointer"; ic.onclick=()=>showDetail(x.id); ic.appendChild(icon(x.id,28)); nmtd.appendChild(ic);
+    const nm = el("span","lnm", esc(ty(x.id).name)); nm.style.cursor="pointer"; nm.onclick=()=>showDetail(x.id); nmtd.appendChild(nm);
+    if(!isCraftable(x.id)) nmtd.appendChild(el("span","tag raw"," "+i18n("сырьё")));
+    tr.appendChild(nmtd);
+    const qtd = el("td","lqty");
+    const qb = el("div","qstep");
+    const dec = el("button","pstep"); dec.type="button"; dec.textContent="−"; dec.title=i18n("Меньше"); dec.onclick=()=>setListQty(x.id, x.qty-1);
     const inp = el("input"); inp.type="number"; inp.min="1"; inp.value=String(x.qty); inp.onchange=()=>setListQty(x.id, parseInt(inp.value)||1);
-    const inc = el("button","pstep"); inc.type="button"; inc.textContent="+"; inc.onclick=()=>setListQty(x.id, x.qty+1);
-    qb.appendChild(dec); qb.appendChild(inp); qb.appendChild(inc); row.appendChild(qb);
-    const del = el("button","sxb del"); del.innerHTML=ICO_DEL; del.title=i18n("Удалить"); del.onclick=()=>removeFromList(x.id); row.appendChild(del);
-    lt.appendChild(row);
+    const inc = el("button","pstep"); inc.type="button"; inc.textContent="+"; inc.title=i18n("Больше"); inc.onclick=()=>setListQty(x.id, x.qty+1);
+    qb.appendChild(dec); qb.appendChild(inp); qb.appendChild(inc); qtd.appendChild(qb); tr.appendChild(qtd);
+    const atd = el("td","lact");
+    const eye = el("button","sxb eye"+(off?" eyeoff":"")); eye.innerHTML=ICO_EYE; eye.title=off?i18n("Учитывать в крафте"):i18n("Не учитывать в крафте"); eye.onclick=()=>toggleListOff(x.id);
+    const del = el("button","sxb del"); del.innerHTML=ICO_DEL; del.title=i18n("Удалить"); del.onclick=()=>removeFromList(x.id);
+    atd.appendChild(eye); atd.appendChild(del); tr.appendChild(atd);
+    tb.appendChild(tr);
   });
-  d.appendChild(lt);
+  tbl.appendChild(tb);
+  d.appendChild(tbl);
 
   // — агрегированный план: переиспользуем renderPlan через виртуальный корень —
   buildListRoot();

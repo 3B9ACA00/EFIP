@@ -207,6 +207,7 @@ const EN = {
   " — отметь одну из: {list}":" — pick one of: {list}","Поиск «{q}»":"Search «{q}»",
   // раздел «Список крафта» (js/list.js)
   "📋 Список":"📋 List","📋 Список крафта":"📋 Craft list","➕ В список":"➕ Add to list","✓ в списке":"✓ in list","Очистить всё":"Clear all",
+  "Предмет":"Item","Не учитывать в крафте":"Exclude from craft","Учитывать в крафте":"Include in craft","Меньше":"Less","Больше":"More",
   "предметов: {n}":"items: {n}","Список пуст — открой предмет в каталоге и нажми «➕ В список».":"List is empty — open an item in the catalog and click «➕ Add to list».",
   "Очистить весь список крафта?":"Clear the whole craft list?",
   "Список: <b>{n} предметов</b> &nbsp;·&nbsp; ⛏ руда: <b>{ore} м³</b>":"List: <b>{n} items</b> &nbsp;·&nbsp; ⛏ ore: <b>{ore} m³</b>",

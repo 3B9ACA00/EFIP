@@ -789,9 +789,20 @@ button:active{transform:translateY(1px)}
 /* ── Раздел «Список крафта» (js/list.js) ── */
 #navlist{cursor:pointer}
 .listhead .addlistbtn{margin-left:6px}
-.listitems{display:flex;flex-direction:column;gap:6px;margin:10px 0 14px}
-.litem{display:flex;align-items:center;gap:10px;padding:6px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px}
-.litem .lnm{flex:1 1 auto;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.litem .lqty{display:flex;align-items:center;gap:2px}
-.litem .lqty input{width:56px;text-align:center;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:5px;color:inherit;padding:3px 4px}
+.listtbl{border-collapse:collapse;margin:8px 0 14px;font-size:13px;max-width:560px}
+.listtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-bottom:1px solid rgba(255,255,255,.1)}
+.listtbl th.lqty,.listtbl th.lact{text-align:center}
+.listtbl td{padding:3px 8px;vertical-align:middle;border:0}
+.listtbl tr.zeb td{background:rgba(255,255,255,.035)}
+.listtbl tr.off td{opacity:.4}
+.listtbl tr.off .lnm{text-decoration:line-through}
+.listtbl .lnum{color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;width:22px}
+.listtbl .lname{display:flex;align-items:center;gap:8px;white-space:nowrap;max-width:280px}
+.listtbl .lname .lnm{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.listtbl .lqty{text-align:center}
+.listtbl .qstep{display:inline-flex;align-items:center;gap:2px}
+.listtbl .lqty input{width:46px;text-align:center;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:5px;color:inherit;padding:2px 3px}
+.listtbl .lact{white-space:nowrap;text-align:right}
+.listtbl .lact .sxb{margin-left:1px}
+.listtbl .sxb.eye.eyeoff{color:#e0a93a}
 .listplan{margin-top:4px}
