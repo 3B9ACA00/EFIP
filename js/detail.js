@@ -28,9 +28,8 @@ function showDetail(id, qtyOverride){
   const tabs = makeTabs(d);
   const recs = byOut[id] || [];
   let graphRes = null;
-  // постройка: рецепты, которые в ней крутятся — первой вкладкой
+  // постройка: рецепты, которые в ней крутятся — вкладка добавляется НИЖЕ, после «Рецепт и план»
   const facRecs = facilityRecipes(t);
-  if(facRecs) tabs.add(i18n("Рецепты здесь"), facRecs, i18n("Что производится в постройке"));
 
   // ── ТАБ 1: РЕЦЕПТ + ПЛАН (вместе, первым) ──
   const tMain = el("div");
@@ -76,6 +75,9 @@ function showDetail(id, qtyOverride){
     }
     tabs.add(i18n("Сырьё"), tMain);
   }
+
+  // ── постройка: что в ней производится (рефайн/крафт) — ПОСЛЕ «Рецепт и план» ──
+  if(facRecs) tabs.add(i18n("Рецепты здесь"), facRecs, i18n("Что производится в постройке"));
 
   // ── ТАБ 2: Характеристики ──
   tabs.add(i18n("Характеристики"), charsPanel(t), i18n("Характеристики"));
@@ -147,7 +149,10 @@ function recipeBlock(recs, mainId, qtyInput){
     row(i18n("Вариант рецепта"), varKids);
   } else {
     const facs = [...new Set(r.fac||[])].sort((a,b)=>ty(a).name.localeCompare(ty(b).name));
-    const facKids = facs.length ? facs.map((f)=>{ const fc=el("div","rfacchip on"); fc.appendChild(icon(f,28)); fc.appendChild(el("span","rfacnm", esc(ty(f).name))); return fc; }) : [el("span","note","—")];
+    let facKids;
+    if(facs.length) facKids = facs.map((f)=>{ const fc=el("div","rfacchip on"); fc.appendChild(icon(f,28)); fc.appendChild(el("span","rfacnm", esc(ty(f).name))); return fc; });
+    else if(r.build){ const fc=el("div","rfacchip on bmode"); fc.appendChild(el("span","rfacnm","Build Mode [B]")); facKids=[fc]; }  // постройка (base building) — нет industry-facility
+    else facKids = [el("span","note","—")];
     row(i18n("Постройка"), facKids);
   }
   // строка 2 — ингредиенты (плитки одинакового размера)

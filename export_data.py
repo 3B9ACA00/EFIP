@@ -77,6 +77,8 @@ def attrs_of(tid, names):  # выбранные dogma-характеристик
 # --- типы (каталог: имя, категория, группа, объём + слоты/слот для фиттинга) ---
 types = {}
 for r in cur.execute("select type_id,name,category_name,group_name,volume,mass from types"):
+    if r['group_name'] == 'Construction site':
+        continue   # дубль-носитель рецепта постройки (assemblyConstruction, re/70); сам деплой = constructedItem
     rec = {
         'id': r['type_id'], 'name': r['name'],
         'cat': r['category_name'] or 'Unknown', 'grp': r['group_name'] or '',
