@@ -38,7 +38,7 @@ function renderPlan(id, qty, host){
   if(oreBlocked.length) host.appendChild(el("div","orewarn", i18n("⚠ Крафт невозможен — нет источника: {n}. Верни выключенную руду.", {n:oreBlocked.map((m)=>esc(ty(m).name)).join(", ")})));
   const overLimit = new Set(oresOverLimit({raw}));   // руды, оставшиеся над лимитом (рероут не помог)
   if(overLimit.size) host.appendChild(el("div","orewarn lim", i18n("⚠ Не уложиться в лимит: {n} — не хватает альтернатив.", {n:[...overLimit].map((o)=>esc(ty(o).name)).join(", ")})));
-  const recompute = ()=>{ const sc=$("#detail")?$("#detail").scrollTop:0; saveOrePrefs(); resetCost(); showDetail(id); if($("#detail")) $("#detail").scrollTop=sc; };
+  const recompute = ()=>{ const sc=$("#detail")?$("#detail").scrollTop:0; saveOrePrefs(); resetCost(); if(id===LIST_ROOT) showList(); else showDetail(id); if($("#detail")) $("#detail").scrollTop=sc; };
   // ячейка «уже есть» (склад): вводишь сколько есть → вычитается из спроса плана
   const haveInput=(itm)=>{ const td=el("td","havetd"); const i=el("input"); i.type="number"; i.min="0"; i.placeholder="0"; i.className="havein"; i.value=stock[itm]>0?String(stock[itm]):"";
     i.title=i18n("Уже есть (вычтется из плана)"); i.onclick=(e)=>e.stopPropagation();
@@ -334,7 +334,7 @@ function renderPlan(id, qty, host){
   });
   const dmemo={};
   const refineSteps=(steps||[]).filter((s)=>isRefineStepR(s.r)).sort((a,b)=>nodeDepth(a.id,dmemo)-nodeDepth(b.id,dmemo));
-  const craftSteps =(steps||[]).filter((s)=>!isRefineStepR(s.r)).sort((a,b)=>nodeDepth(a.id,dmemo)-nodeDepth(b.id,dmemo));
+  const craftSteps =(steps||[]).filter((s)=>!isRefineStepR(s.r) && s.id!==LIST_ROOT).sort((a,b)=>nodeDepth(a.id,dmemo)-nodeDepth(b.id,dmemo));
   // кнопка «копировать сырьё» (руда+лут) — в шапке этапа добычи
   const copyBtn = el("button","sec-btn mini2",i18n("⧉ копировать сырьё"));
   copyBtn.onclick = ()=>{
@@ -356,7 +356,9 @@ function renderPlan(id, qty, host){
   const hasLoot = Object.keys(lootR).length > 0;
 
   const tot = el("div","totals",
-    i18n("Цель: <b>{q} × {name}</b> &nbsp;·&nbsp; ⛏ руда: <b>{ore} м³</b>", {q:num(qty), name:esc(ty(id).name), ore:num(rawVol)}) +
+    (id===LIST_ROOT
+      ? i18n("Список: <b>{n} предметов</b> &nbsp;·&nbsp; ⛏ руда: <b>{ore} м³</b>", {n:listCount(), ore:num(rawVol)})
+      : i18n("Цель: <b>{q} × {name}</b> &nbsp;·&nbsp; ⛏ руда: <b>{ore} м³</b>", {q:num(qty), name:esc(ty(id).name), ore:num(rawVol)})) +
     (hasLoot ? i18n(" &nbsp;·&nbsp; <span class=\"lootw\">🎁 лут: {v} м³</span>", {v:num(lootVol)}) : ``) +
     i18n(" &nbsp;·&nbsp; время: <b>{time}</b>", {time:fmtTime(totalTime)}));
   host.appendChild(tot);

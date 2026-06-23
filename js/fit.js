@@ -334,7 +334,7 @@ function fitWheelSlot(t, k, i, cx, cy, R, angleDeg){
 function showFit(shipId){
   const t = ty(shipId);
   if(!t.slots || !Object.keys(t.slots).length) return showDetail(shipId);
-  selected = shipId; fitMode = true; initFit(t);
+  selected = shipId; fitMode = true; listMode = false; initFit(t); updateListNav();
   const wantHash = "#fit-"+shipId;
   if(location.hash !== wantHash) location.hash = wantHash;
   syncSidebarTo(shipId);

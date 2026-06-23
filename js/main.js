@@ -124,12 +124,18 @@ async function boot(){
   function parseH(){
     const h=(location.hash||"").replace("#","");
     if(h==="ships") return {ships:true};
+    const lm=h.match(/^list(?:=(.*))?$/); if(lm) return {list:true, raw:lm[1]};   // raw=undefined для «#list» без «=»
     const f=h.match(/^fit-(\d+)$/); if(f) return {fit:+f[1]};
     const m=h.match(/^(\d+)(?:x(\d+))?$/);
     return m ? {id:+m[1], qty:m[2]?+m[2]:1} : {};
   }
+  // список крафта: бэкап из localStorage (для счётчика навигации); хеш #list перекроет в dispatch
+  try{ craftList = (JSON.parse(localStorage.getItem("ef_craftlist")||"[]")||[]).filter((x)=> x && T[x.id]); }catch(e){}
+  const nl = $("#navlist"); if(nl) nl.onclick = ()=>{ location.hash = "#"+listHash(); };
+  updateListNav();
   const ph = parseH();
-  if(ph.ships){ selectedCat="Ship"; renderCats(); renderItems(); shipsCompare(); renderCrumbs(); }
+  if(ph.list){ enterList(ph.raw); showList(); }
+  else if(ph.ships){ selectedCat="Ship"; renderCats(); renderItems(); shipsCompare(); renderCrumbs(); }
   else if(ph.fit && T[ph.fit]){ showFit(ph.fit); }
   else if(ph.id && T[ph.id]){ showDetail(ph.id, ph.qty); }
   else {
@@ -138,7 +144,8 @@ async function boot(){
   }
   window.addEventListener("hashchange", ()=>{
     const p = parseH();
-    if(p.ships){ selectedCat="Ship"; renderCats(); renderItems(); shipsCompare(); renderCrumbs(); }
+    if(p.list){ enterList(p.raw); showList(); }
+    else if(p.ships){ selectedCat="Ship"; renderCats(); renderItems(); shipsCompare(); renderCrumbs(); }
     else if(p.fit && T[p.fit]){ if(!(selected===p.fit && fitMode)) showFit(p.fit); }
     else if(p.id && T[p.id]){ if(!(selected===p.id && !fitMode)) showDetail(p.id, p.qty); }
   });

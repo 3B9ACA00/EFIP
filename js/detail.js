@@ -5,7 +5,7 @@ function showDetail(id, qtyOverride){
     const f = document.getElementById("qty");
     if(f && selected === id) qtyOverride = Math.max(1, parseInt(f.value)||1);
   }
-  selected = id; fitMode = false;
+  selected = id; fitMode = false; listMode = false; updateListNav();
   const wantHash = "#" + id + (qtyOverride > 1 ? ("x"+qtyOverride) : "");
   if(location.hash !== wantHash) location.hash = wantHash;   // ссылку можно скинуть другому игроку
   syncSidebarTo(id);
@@ -23,6 +23,9 @@ function showDetail(id, qtyOverride){
   const lnk = el("button","sec-btn mini2 linkbtn",i18n("🔗 Поделиться"));
   lnk.onclick = ()=>{ navigator.clipboard.writeText(location.href).then(()=>{ lnk.textContent=i18n("✓ скопировано"); setTimeout(()=>lnk.textContent=i18n("🔗 Поделиться"),1600); }).catch(()=>{}); };
   head.appendChild(lnk);
+  const addb = el("button","sec-btn mini2 addlistbtn", i18n("➕ В список"));   // добавить в «Список крафта» (с текущим кол-вом производства)
+  addb.onclick = ()=>{ const f=document.getElementById("qty"); const q=f?Math.max(1,parseInt(f.value)||1):1; addToList(id, q); addb.textContent=i18n("✓ в списке"); setTimeout(()=>addb.textContent=i18n("➕ В список"),1300); };
+  head.appendChild(addb);
   d.appendChild(head);
 
   const tabs = makeTabs(d);

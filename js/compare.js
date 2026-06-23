@@ -1,6 +1,6 @@
 // ── сравнительная таблица кораблей ───────────────────
 function shipsCompare(){
-  selected = null; fitMode = false;
+  selected = null; fitMode = false; listMode = false; updateListNav();
   if(location.hash !== "#ships") location.hash = "#ships";
   const allShips = DATA.types.filter((t)=>t.cat==="Ship");
   const d = $("#detail"); d.innerHTML = "";
