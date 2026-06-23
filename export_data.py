@@ -6,9 +6,9 @@
 import sqlite3, json, os, datetime
 
 # Свежий билд берём из ef-atlas/builds/ (экстракция SDE: ef-atlas/scripts/extract-fsd.sh — CCP loader.pyd под Wine).
-BUILD = os.environ.get('EF_BUILD', '3383973-v2026.05')
+BUILD = os.environ.get('EF_BUILD', '3388875-v2026.05')
 DB  = os.environ.get('EF_DB',  r'C:\Users\user\APPS\EF\ef-atlas\data\frontier.sqlite')
-SDE = os.environ.get('EF_SDE', r'C:\SAND\EF\ef-atlas\builds\%s\sde' % BUILD)
+SDE = os.environ.get('EF_SDE', r'C:\Users\user\APPS\EF\ef-atlas\builds\%s\sde' % BUILD)
 SDE_BUILD = os.path.basename(os.path.dirname(SDE.replace('\\', '/').rstrip('/'))) or BUILD
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, 'data.json')
@@ -118,6 +118,29 @@ for bid, info in bpj.items():
         'prim': info.get('primaryTypeID'),
     })
 
+# --- рецепты построек (Deployable) из spacecomponentsbytype.json (component assemblyConstruction) ---
+# Постройки строятся в base building («режим строительства») из inputItems — их НЕТ в
+# industry_blueprints. recipe_type_id (construction-site item) → constructedItem (placeable деплой).
+spc = json.load(open(os.path.join(SDE, 'spacecomponentsbytype.json'), encoding='utf-8'))
+n_dep = 0
+for tid_s, comps in spc.items():
+    ac = comps.get('assemblyConstruction') if isinstance(comps, dict) else None
+    if not ac:
+        continue
+    ci = ac.get('constructedItem')
+    inp = [{'id': int(k), 'q': q} for k, q in ac.get('inputItems', {}).items()]
+    if ci is None or not inp:
+        continue
+    recipes.append({
+        'bp': int(tid_s),              # construction-site item как синтетический blueprint id
+        'inp': inp,
+        'out': [{'id': int(ci), 'q': 1}],
+        'rt': 0,                       # base building — runtime в этих данных нет
+        'prim': int(ci),
+        'build': 1,                    # маркер: постройка (base building), не industry-blueprint
+    })
+    n_dep += 1
+
 # --- facility: в какой постройке производится каждый blueprint ---
 facj = json.load(open(os.path.join(SDE, 'industry_facilities.json'), encoding='utf-8'))
 facilities = {}; bp2fac = {}
@@ -145,7 +168,7 @@ multi = sum(1 for v in recipes if len(v['out']) > 1)
 data = {
     'meta': {'generated': datetime.date.today().isoformat(), 'source': 'decoded SDE %s' % SDE_BUILD,
              'types': len(types), 'recipes': len(recipes), 'craftable': len(craftable),
-             'multi_output': multi, 'facilities': len(facilities)},
+             'multi_output': multi, 'facilities': len(facilities), 'deployables': n_dep},
     'types': list(types.values()),
     'recipes': recipes,
     'facilities': facilities,
