@@ -853,6 +853,24 @@ button:active{transform:translateY(1px)}
 .sy-tag.hp{background:#3a2a10;color:#e8c98a}
 .sy-card .cg.mod{flex:0 0 auto}
 .sy-craft{flex:0 0 auto;font-size:11px}
+.sy-card.clickable{cursor:pointer}
+.sy-card.clickable:hover{border-color:var(--accent);background:#1a2230}
+.sy-attach{font-size:11px;color:#e8c98a;background:#2a2010;border:1px solid #4a3a1a;border-radius:6px;padding:3px 8px;white-space:nowrap;margin-left:auto;flex:0 0 auto}
+.sy-modhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.sy-modhead .sy-h{margin:0}
+.sy-viewsw{display:flex;gap:4px}
+.sy-vbtn{font-size:11px;padding:4px 11px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:7px;cursor:pointer}
+.sy-vbtn.on{background:#1b3a52;border-color:#2f6f97;color:#cfe6ff}
+.sy-table{width:100%;border-collapse:collapse;font-size:12px}
+.sy-table th{text-align:left;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;padding:6px 10px;border-bottom:1px solid var(--line)}
+.sy-table td{padding:6px 10px;border-bottom:1px solid #1b2129;vertical-align:middle;white-space:nowrap}
+.sy-table td:nth-child(2){color:#dce8f5;font-weight:600}
+.sy-trow.clickable{cursor:pointer}
+.sy-trow.clickable:hover{background:var(--panel2)}
+.sy-table .sy-mi{width:28px;height:28px}
+.sy-table .cg.mod .cgc{width:4px;height:4px}
+.sy-basegrid{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:16px;background:linear-gradient(180deg,rgba(255,71,0,.05),transparent)}
+.sy-bgwrap{display:flex;justify-content:center;padding:8px 0;overflow:auto}
 /* спец-категория «Модульная постройка» — выделена, первая */
 .catrow.special{border-left:2px solid var(--accent);background:rgba(255,71,0,.06)}
 .catrow.special .catname{color:#ffb38a;font-weight:700}

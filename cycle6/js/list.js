@@ -161,6 +161,7 @@ function cellGrid(cells, cls, sz){
   return g;
 }
 function syIcon(id){ const im=new Image(); im.className="sy-mi"; im.loading="lazy"; im.src="icons/"+id+".png"; im.onerror=function(){this.style.visibility="hidden";}; return im; }
+let syView="tile";   // вид списка модулей: плитка | таблица
 // «Верфь» Цикла 6: модули корабля (главный раздел) + компактная сводка базы
 function renderShipyard(d){
   const sy=DATA.shipyard;
@@ -168,31 +169,81 @@ function renderShipyard(d){
   const wrap=el("div","shipyard");
   wrap.appendChild(el("div","sy-title","🛠 "+i18n("Верфь — модульная постройка")));
 
-  // === МОДУЛИ КОРАБЛЯ (главный раздел) ===
+  // === ФОРМА БАЗЫ (сетка корпуса) — СВЕРХУ ===
+  if(sy.base && sy.base.parts){
+    const all=[];
+    sy.base.parts.forEach(p=>{ const o=p.off||{}; (p.cells||[]).forEach(cc=>all.push({x:cc.x+(o.x||0), y:cc.y+(o.y||0)})); });
+    if(all.length){
+      const bg=el("div","sy-basegrid");
+      bg.appendChild(el("div","sy-h",i18n("Форма базы")+" #"+sy.base.id+" — "+i18n("ячейки под модули (")+all.length+")"));
+      const gw=el("div","sy-bgwrap"); gw.appendChild(cellGrid(all,"hull",7));
+      bg.appendChild(gw);
+      wrap.appendChild(bg);
+    }
+  }
+
+  // === МОДУЛИ КОРАБЛЯ (главный раздел) — плитка / таблица ===
   const mwrap=el("div","sy-mods");
-  mwrap.appendChild(el("div","sy-h",i18n("Модули корабля")+" · "+sy.modules.length+" "+i18n("шт")));
-  const bySys={}; sy.modules.forEach(m=>{ (bySys[m.sys||"other"]=bySys[m.sys||"other"]||[]).push(m); });
-  Object.keys(bySys).sort().forEach(sys=>{
-    const grp=el("div","sy-grp");
-    grp.appendChild(el("div","sy-sys",String(sys).replace(/_/g," ")));
-    const cards=el("div","sy-cards");
-    bySys[sys].forEach(m=>{
-      const c=el("div","sy-card");
-      c.appendChild(syIcon(m.id));
-      const info=el("div","sy-info");
-      info.appendChild(el("div","sy-name",m.name));
-      const tags=el("div","sy-tags");
-      if(m.cap) tags.appendChild(el("span","sy-tag cap",m.cap));
-      tags.appendChild(el("span","sy-tag hp",(m.hp&&m.hp.length)?m.hp.join("/"):"internal"));
-      tags.appendChild(el("span","sy-tag",(m.bbox?m.bbox[0]+"×"+m.bbox[1]:"")+" · "+(m.cells?m.cells.length:0)+" "+i18n("ячеек")));
-      info.appendChild(tags);
-      c.appendChild(info);
-      c.appendChild(cellGrid(m.cells,"mod"));
-      if(m.bp!=null){ const btn=el("button","mini sy-craft",i18n("Рецепт")); btn.onclick=()=>{ location.hash="#"+m.id; }; c.appendChild(btn); }
-      cards.appendChild(c);
-    });
-    grp.appendChild(cards); mwrap.appendChild(grp);
-  });
+  const head=el("div","sy-modhead");
+  head.appendChild(el("div","sy-h",i18n("Модули корабля")+" · "+sy.modules.length+" "+i18n("шт")));
+  const sw=el("div","sy-viewsw");
+  const bTile=el("button","sy-vbtn","▦ "+i18n("плитка"));
+  const bTab =el("button","sy-vbtn","☰ "+i18n("таблица"));
+  bTile.onclick=()=>{ syView="tile"; fillMods(); };
+  bTab.onclick =()=>{ syView="table"; fillMods(); };
+  sw.appendChild(bTile); sw.appendChild(bTab); head.appendChild(sw);
+  mwrap.appendChild(head);
+  const body=el("div","sy-modbody"); mwrap.appendChild(body);
+  // footprint справа: сетка ИЛИ «⤷ hardpoint» для внешних модулей (0 ячеек)
+  function fp(m){
+    if(m.cells&&m.cells.length) return cellGrid(m.cells,"mod");
+    const a=el("span","sy-attach","⤷ "+((m.hp&&m.hp.length)?m.hp.join("/"):"—"));
+    a.title=i18n("крепится к hardpoint (без ячеек корпуса)"); return a;
+  }
+  function fillMods(){
+    body.innerHTML="";
+    bTile.classList.toggle("on",syView!=="table"); bTab.classList.toggle("on",syView==="table");
+    if(syView==="table"){
+      const tbl=el("table","sy-table");
+      const hr=document.createElement("tr");
+      [" ","модуль","система","способность","hardpoint","ячейки","footprint"].forEach(h=>{ const th=document.createElement("th"); th.textContent=i18n(h.trim()); hr.appendChild(th); });
+      tbl.appendChild(hr);
+      sy.modules.forEach(m=>{
+        const tr=el("tr","sy-trow"+(m.bp!=null?" clickable":""));
+        if(m.bp!=null){ tr.onclick=()=>{ location.hash="#"+m.id; }; tr.title=i18n("открыть рецепт"); }
+        const tdI=document.createElement("td"); tdI.appendChild(syIcon(m.id)); tr.appendChild(tdI);
+        const cellsTxt=(m.cells&&m.cells.length)?(m.cells.length+(m.bbox&&m.bbox[0]?" ("+m.bbox[0]+"×"+m.bbox[1]+")":"")):"—";
+        [m.name, String(m.sys||"").replace(/_/g," "), m.cap||"—", (m.hp&&m.hp.length)?m.hp.join("/"):"internal", cellsTxt].forEach(v=>{ const td=document.createElement("td"); td.textContent=v; tr.appendChild(td); });
+        const tdF=document.createElement("td"); tdF.appendChild(fp(m)); tr.appendChild(tdF);
+        tbl.appendChild(tr);
+      });
+      body.appendChild(tbl);
+    } else {
+      const bySys={}; sy.modules.forEach(m=>{ (bySys[m.sys||"other"]=bySys[m.sys||"other"]||[]).push(m); });
+      Object.keys(bySys).sort().forEach(sys=>{
+        const grp=el("div","sy-grp");
+        grp.appendChild(el("div","sy-sys",String(sys).replace(/_/g," ")));
+        const cards=el("div","sy-cards");
+        bySys[sys].forEach(m=>{
+          const c=el("div","sy-card"+(m.bp!=null?" clickable":""));
+          if(m.bp!=null){ c.onclick=()=>{ location.hash="#"+m.id; }; c.title=i18n("открыть рецепт"); }
+          c.appendChild(syIcon(m.id));
+          const info=el("div","sy-info");
+          info.appendChild(el("div","sy-name",m.name));
+          const tags=el("div","sy-tags");
+          if(m.cap) tags.appendChild(el("span","sy-tag cap",m.cap));
+          tags.appendChild(el("span","sy-tag hp",(m.hp&&m.hp.length)?m.hp.join("/"):"internal"));
+          tags.appendChild(el("span","sy-tag",(m.cells&&m.cells.length)?((m.bbox?m.bbox[0]+"×"+m.bbox[1]+" · ":"")+m.cells.length+" "+i18n("ячеек")):i18n("без ячеек")));
+          info.appendChild(tags);
+          c.appendChild(info);
+          c.appendChild(fp(m));
+          cards.appendChild(c);
+        });
+        grp.appendChild(cards); body.appendChild(grp);
+      });
+    }
+  }
+  fillMods();
   wrap.appendChild(mwrap);
 
   // === БАЗА (компактная сводка, без силуэта) ===
