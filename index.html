@@ -4,12 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>EFIP — EVE Frontier Industry Planner</title>
-  <!-- Лендинг-роутер по циклам. Цикл 5 заморожен (архив), Цикл 6 — текущий.
-       Пока Цикл 6 пуст — корень ведёт на Цикл 5, сохраняя hash-диплинк (#typeID). -->
+  <!-- Лендинг-роутер по циклам. Цикл 5 заморожен (архив), Цикл 6 — текущий/активный.
+       Корень ведёт на Цикл 6, сохраняя hash-диплинк (#typeID). -->
   <script>
     (function () {
-      // когда Цикл 6 наполнится — поменять цель на 'cycle6/'
-      location.replace('cycle5/' + location.hash);
+      location.replace('cycle6/' + location.hash);
     })();
   </script>
   <style>
