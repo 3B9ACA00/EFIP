@@ -216,7 +216,7 @@ const EN = {
   "ячейка корпуса":"hull cell","модуль занимает несколько ячеек — должен влезть в форму базы":"a module occupies several cells — must fit the base shape",
   "Форма базы #":"Base shape #","корпус из ":"hull of ","Модули":"Modules","часть":"part","ячеек":"cells","Рецепт":"Recipe",
   "устарело в Цикле 6 — постройка теперь модульная (см. «Верфь»)":"deprecated in Cycle 6 — building is now modular (see Shipyard)",
-  "нет данных верфи":"no shipyard data",
+  "нет данных верфи":"no shipyard data","Модули корабля":"Ship modules","шт":"pcs","частей корпуса":"hull parts","предустановлено модулей":"pre-installed modules",
   "предметов: {n}":"items: {n}","Список пуст — открой предмет в каталоге и нажми «➕ В список».":"List is empty — open an item in the catalog and click «➕ Add to list».",
   "Очистить весь список крафта?":"Clear the whole craft list?",
   "Список: <b>{n} предметов</b> &nbsp;·&nbsp; ⛏ руда: <b>{ore} м³</b>":"List: <b>{n} items</b> &nbsp;·&nbsp; ⛏ ore: <b>{ore} m³</b>",

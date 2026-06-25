@@ -160,53 +160,16 @@ function cellGrid(cells, cls, sz){
   return g;
 }
 function syIcon(id){ const im=new Image(); im.className="sy-mi"; im.loading="lazy"; im.src="icons/"+id+".png"; im.onerror=function(){this.style.visibility="hidden";}; return im; }
-// «Верфь» Цикла 6: одна база (сетка частей) + модули (footprint + рецепт)
+// «Верфь» Цикла 6: модули корабля (главный раздел) + компактная сводка базы
 function renderShipyard(d){
   const sy=DATA.shipyard;
-  if(!sy||!sy.base){ d.appendChild(el("div","cycle6msg","нет данных верфи")); return; }
+  if(!sy||!sy.modules){ d.appendChild(el("div","cycle6msg",i18n("нет данных верфи"))); return; }
   const wrap=el("div","shipyard");
   wrap.appendChild(el("div","sy-title","🛠 "+i18n("Верфь — модульная постройка")));
-  // --- база ---
-  const b=sy.base, bc=el("div","sy-base");
-  bc.appendChild(el("div","sy-h",i18n("База")));
-  const meta=el("div","sy-meta");
-  meta.appendChild(el("span","sy-chip","⛽ "+((b.fuel&&b.fuel.name)||"—")));
-  const hpAll=b.parts.reduce((a,p)=>a+((p.hp&&p.hp.length)||0),0);
-  meta.appendChild(el("span","sy-chip",i18n("частей")+": "+b.parts.length));
-  meta.appendChild(el("span","sy-chip","hardpoints: "+hpAll));
-  meta.appendChild(el("span","sy-chip",i18n("предустановлено")+": "+b.interior.length));
-  bc.appendChild(meta);
-  // легенда: что такое квадратики
-  const leg=el("div","sy-legend");
-  leg.innerHTML='<span class="lg"><i class="lgc on"></i> '+i18n("ячейка корпуса")+'</span>'+
-                '<span class="lg">'+i18n("модуль занимает несколько ячеек — должен влезть в форму базы")+'</span>';
-  bc.appendChild(leg);
-  // силуэт базы: 11 частей собраны по мировым координатам (вид сверху: X×Z)
-  const cap=el("div","sy-cap"); cap.textContent=i18n("Форма базы #")+b.id+" — "+i18n("корпус из ")+b.parts.length+" "+i18n("частей")+":";
-  bc.appendChild(cap);
-  const wc=b.parts.filter(p=>p.cells&&p.cells.length&&p.pos);
-  const px=wc.map(p=>p.pos[0]), pz=wc.map(p=>p.pos[2]);
-  const minX=Math.min.apply(null,px),maxX=Math.max.apply(null,px),minZ=Math.min.apply(null,pz),maxZ=Math.max.apply(null,pz);
-  const hull=el("div","sy-hull");
-  wc.forEach(p=>{
-    const hp=el("div","sy-hpart");
-    const lx=(maxX-minX)?(p.pos[0]-minX)/(maxX-minX):.5;
-    const lz=(maxZ-minZ)?(p.pos[2]-minZ)/(maxZ-minZ):.5;
-    hp.style.left=(10+lx*80)+"%"; hp.style.top=(10+lz*80)+"%";
-    hp.title=i18n("часть")+" #"+p.pid+" · "+p.cells.length+" "+i18n("ячеек");
-    hp.appendChild(cellGrid(p.cells,"hull"));
-    hull.appendChild(hp);
-  });
-  bc.appendChild(hull);
-  if(b.interior&&b.interior.length){
-    const il=el("div","sy-interior");
-    b.interior.forEach(i=>{ const ch=el("span","sy-ichip"); ch.appendChild(syIcon(i.id)); ch.appendChild(el("span","",i.name||("#"+i.id))); il.appendChild(ch); });
-    bc.appendChild(il);
-  }
-  wrap.appendChild(bc);
-  // --- модули по системам ---
+
+  // === МОДУЛИ КОРАБЛЯ (главный раздел) ===
   const mwrap=el("div","sy-mods");
-  mwrap.appendChild(el("div","sy-h",i18n("Модули")+" ("+sy.modules.length+")"));
+  mwrap.appendChild(el("div","sy-h",i18n("Модули корабля")+" · "+sy.modules.length+" "+i18n("шт")));
   const bySys={}; sy.modules.forEach(m=>{ (bySys[m.sys||"other"]=bySys[m.sys||"other"]||[]).push(m); });
   Object.keys(bySys).sort().forEach(sys=>{
     const grp=el("div","sy-grp");
@@ -220,7 +183,7 @@ function renderShipyard(d){
       const tags=el("div","sy-tags");
       if(m.cap) tags.appendChild(el("span","sy-tag cap",m.cap));
       tags.appendChild(el("span","sy-tag hp",(m.hp&&m.hp.length)?m.hp.join("/"):"internal"));
-      tags.appendChild(el("span","sy-tag",(m.bbox?m.bbox[0]+"×"+m.bbox[1]:"")+" · "+(m.cells?m.cells.length:0)+" cells"));
+      tags.appendChild(el("span","sy-tag",(m.bbox?m.bbox[0]+"×"+m.bbox[1]:"")+" · "+(m.cells?m.cells.length:0)+" "+i18n("ячеек")));
       info.appendChild(tags);
       c.appendChild(info);
       c.appendChild(cellGrid(m.cells,"mod"));
@@ -230,5 +193,23 @@ function renderShipyard(d){
     grp.appendChild(cards); mwrap.appendChild(grp);
   });
   wrap.appendChild(mwrap);
+
+  // === БАЗА (компактная сводка, без силуэта) ===
+  const b=sy.base;
+  if(b){
+    const bc=el("div","sy-base");
+    bc.appendChild(el("div","sy-h",i18n("База")+" #"+b.id));
+    const meta=el("div","sy-meta");
+    meta.appendChild(el("span","sy-chip","⛽ "+((b.fuel&&b.fuel.name)||"—")));
+    meta.appendChild(el("span","sy-chip",i18n("частей корпуса")+": "+b.parts.length));
+    meta.appendChild(el("span","sy-chip",i18n("предустановлено модулей")+": "+(b.interior?b.interior.length:0)));
+    bc.appendChild(meta);
+    if(b.interior&&b.interior.length){
+      const il=el("div","sy-interior");
+      b.interior.forEach(i=>{ const ch=el("span","sy-ichip"); ch.appendChild(syIcon(i.id)); ch.appendChild(el("span","",i.name||("#"+i.id))); il.appendChild(ch); });
+      bc.appendChild(il);
+    }
+    wrap.appendChild(bc);
+  }
   d.appendChild(wrap);
 }
