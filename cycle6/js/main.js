@@ -32,7 +32,16 @@ function renderItems(){
   const gq = ($("#gsearch") ? $("#gsearch").value : "").trim().toLowerCase();
   const lq = ($("#search")  ? $("#search").value  : "").trim().toLowerCase();
   const onlyCraft = $("#onlyCraft") ? $("#onlyCraft").checked : false;
+  // «Модульная постройка»: 2-й сайдбар = только наши 16 модулей-конструкторов
+  const syIds = (cycle6Mode && DATA.shipyard && DATA.shipyard.modules)
+    ? new Set(DATA.shipyard.modules.map(m=>m.id)) : null;
   let items = DATA.types.filter((t)=>{
+    if(syIds){
+      if(!syIds.has(t.id)) return false;
+      if(gq) return t.name.toLowerCase().includes(gq) || String(t.id)===gq;
+      if(lq) return t.name.toLowerCase().includes(lq) || String(t.id)===lq;
+      return true;
+    }
     if(onlyCraft && !isCraftable(t.id)) return false;
     if(gq) return t.name.toLowerCase().includes(gq) || String(t.id)===gq;  // глоб. поиск перекрывает категорию
     if(selectedCat && t.cat!==selectedCat) return false;

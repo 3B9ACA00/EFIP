@@ -140,7 +140,12 @@ function showCycle6(){
   const d=$("#detail"); d.innerHTML="";
   renderShipyard(d);
   if(typeof renderCats==="function") renderCats();
+  if(typeof renderItems==="function") renderItems();   // 2-й сайдбар = 16 модулей-конструкторов
   updateListNav(); renderCrumbs();
+}
+// id — это наш модуль-конструктор Верфи?
+function isShipyardModule(id){
+  return !!(DATA.shipyard && DATA.shipyard.modules && DATA.shipyard.modules.some(m=>m.id===id));
 }
 // мини-сетка cells (footprint модуля / часть базы)
 function cellGrid(cells, cls, sz){
@@ -152,15 +157,78 @@ function cellGrid(cells, cls, sz){
   const w=Math.max.apply(null,xs)-minx+1, h=Math.max.apply(null,ys)-miny+1;
   g.style.gridTemplateColumns="repeat("+w+","+sz+"px)";
   g.style.gridTemplateRows="repeat("+h+","+sz+"px)";
+  if(cls==="hull") g.style.gap="0";   // силуэт корпуса — ячейки стык-в-стык
   const on=new Set(cells.map(c=>(c.x-minx)+","+(c.y-miny)));
   for(let y=0;y<h;y++) for(let x=0;x<w;x++){
     const i=el("i","cgc"+(on.has(x+","+y)?" on":""));
+    i.style.width=sz+"px"; i.style.height=sz+"px";   // ячейка = шаг трека (для стыковки частей)
     i.style.gridColumn=(x+1); i.style.gridRow=(y+1);
     g.appendChild(i);
   }
   return g;
 }
 function syIcon(id){ const im=new Image(); im.className="sy-mi"; im.loading="lazy"; im.src="icons/"+id+".png"; im.onerror=function(){this.style.visibility="hidden";}; return im; }
+
+// Силуэт базы (вид сверху). Части в SDE стоят в 3D-каркасе с зазорами и идеально
+// не тайлятся 1:1. Растеризуем ВСЕ части в ОДНУ общую сетку: мировую pos делим на
+// шаг G и кладём локальные ячейки целым шагом — соседние части сливаются в цельный
+// корпус БЕЗ наложения сеток (каждая клетка рисуется один раз). Лево/право —
+// истинные зеркала (проверено pid4↔pid5). G подобран по ASCII: связный силуэт.
+function renderBaseShape(base){
+  const G=1.6;   // мировых единиц на клетку (квантизация)
+  const Cp=9;    // пикс на клетку
+  const parts=base.parts.filter(p=>p.pos);
+  const on=new Set();                 // занятые клетки общей сетки: "x,y"
+  const prongs=[];                    // части без ячеек («рога») — маркеры
+  let cellN=0;
+  parts.forEach(p=>{
+    const c=p.cells||[];
+    if(!c.length){ prongs.push(p); return; }
+    cellN+=c.length;
+    const xs=c.map(v=>v.x),ys=c.map(v=>v.y);
+    const mnx=Math.min.apply(null,xs),mny=Math.min.apply(null,ys);
+    const w=Math.max.apply(null,xs)-mnx+1, h=Math.max.apply(null,ys)-mny+1;
+    const bx=Math.round(p.pos[0]/G-(w-1)/2), by=Math.round(p.pos[2]/G-(h-1)/2);
+    c.forEach(v=> on.add((bx+v.x-mnx)+","+(by+v.y-mny)) );
+  });
+  // Принудительная зеркальная симметрия: округление +x и −x частей расходится и
+  // крылья выходят разной длины. Объединяем сетку с её отражением относительно
+  // центральной оси (axisSum = MINX+MAXX, целое) — обе половины становятся равны.
+  {
+    const ax=[...on].map(s=>+s.split(",")[0]);
+    const axisSum=Math.min.apply(null,ax)+Math.max.apply(null,ax);
+    const sym=new Set();
+    on.forEach(s=>{ const a=s.split(","); const x=+a[0],y=+a[1]; sym.add(x+","+y); sym.add((axisSum-x)+","+y); });
+    on.clear(); sym.forEach(s=>on.add(s)); on._axisSum=axisSum;
+  }
+  const pts=[...on].map(s=>{ const a=s.split(","); return {x:+a[0],y:+a[1]}; });
+  const gx=pts.map(p=>p.x),gy=pts.map(p=>p.y);
+  const MINX=Math.min.apply(null,gx),MINY=Math.min.apply(null,gy);
+  const AXIS=on._axisSum;   // ось симметрии в координатах сетки
+
+  const bg=el("div","sy-basegrid");
+  bg.appendChild(el("div","sy-h",i18n("Форма базы")+" #"+base.id+" — "+parts.length+" "+i18n("частей")+", "+cellN+" "+i18n("ячеек")));
+  const stage=el("div","sy-stage");
+  const g=cellGrid(pts,"hull",Cp);    // ОДНА сетка — ровные линии, без наложений
+  g.style.position="absolute"; g.style.left="0"; g.style.top="0";
+  stage.appendChild(g);
+  // «рога» (части без ячеек) — маркеры симметрично относительно оси AXIS
+  prongs.forEach(p=>{
+    const mag=Math.round(Math.abs(p.pos[0])/G);
+    const gxp=(p.pos[0]<0)?(AXIS/2-mag):(AXIS/2+mag);   // зеркально от центра
+    const px=gxp-MINX, py=Math.round(p.pos[2]/G)-MINY;
+    const e=el("div","sy-pempty","◆");
+    e.style.position="absolute";
+    e.style.left=(px*Cp-4)+"px"; e.style.top=(py*Cp-7)+"px";
+    e.title=i18n("часть")+" #"+p.pid+" — "+i18n("без ячеек (движок/нос)");
+    stage.appendChild(e);
+  });
+  const W=(Math.max.apply(null,gx)-MINX+1)*Cp, H=(Math.max.apply(null,gy)-MINY+1)*Cp;
+  stage.style.width=W+"px"; stage.style.height=H+"px";
+  const sw=el("div","sy-bgwrap"); sw.appendChild(stage);
+  bg.appendChild(sw);
+  return bg;
+}
 let syView="tile";   // вид списка модулей: плитка | таблица
 // «Верфь» Цикла 6: модули корабля (главный раздел) + компактная сводка базы
 function renderShipyard(d){
@@ -169,30 +237,18 @@ function renderShipyard(d){
   const wrap=el("div","shipyard");
   wrap.appendChild(el("div","sy-title","🛠 "+i18n("Верфь — модульная постройка")));
 
-  // === ФОРМА БАЗЫ (сетка корпуса) — СВЕРХУ ===
-  // РЕВЕРС раскладки: повороты частей нулевые → собираем по position. Вид сверху:
-  // горизонталь = pos.x (лево-право), вертикаль = pos.z (нос -z сверху, хвост +z снизу),
-  // ячейки части центрируются на её позиции (масштаб 1:1). cell_offset НЕ годится (мусор/overlap).
+  // === ФОРМА БАЗЫ — ВИД СВЕРХУ ===
+  // Силуэт из SDE: единый холст в мировых координатах. 1 ЯЧЕЙКА = 1 мировая единица,
+  // поэтому сетка каждой части ставится по её world position и части СТЫКУЮТСЯ в один
+  // силуэт. Экран: X = pos.x (лево-право), Y = pos.z (нос −z сверху, корма +z снизу).
+  // Лево/право — это РАЗНЫЕ part-graphic (зеркальные в данных), повороты нулевые.
+  // Части без ячеек (10/11 — передние «рога») — маркером в их world-точке.
   if(sy.base && sy.base.parts){
-    const seen=new Set(), all=[];
-    sy.base.parts.forEach(p=>{
-      if(!p.cells||!p.cells.length||!p.pos) return;
-      const xs=p.cells.map(c=>c.x), ys=p.cells.map(c=>c.y);
-      const cxc=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2, cyc=(Math.min.apply(null,ys)+Math.max.apply(null,ys))/2;
-      const ox=p.pos[0], oy=p.pos[2];
-      p.cells.forEach(c=>{ const gx=Math.round(ox+(c.x-cxc)), gy=Math.round(oy+(c.y-cyc)), k=gx+","+gy;
-        if(!seen.has(k)){ seen.add(k); all.push({x:gx,y:gy}); } });
-    });
-    if(all.length){
-      const bg=el("div","sy-basegrid");
-      bg.appendChild(el("div","sy-h",i18n("Форма базы")+" #"+sy.base.id+" — "+i18n("ячейки под модули (")+all.length+")"));
-      const gw=el("div","sy-bgwrap"); gw.appendChild(cellGrid(all,"hull",7));
-      bg.appendChild(gw);
-      wrap.appendChild(bg);
-    }
+    wrap.appendChild(renderBaseShape(sy.base));
   }
 
-  // === МОДУЛИ КОРАБЛЯ (главный раздел) — плитка / таблица ===
+  // === МОДУЛИ КОРАБЛЯ — плитка / таблица (с сетками-footprint) ===
+  // Дублируют 2-й сайдбар, но здесь с наглядными сетками; клик → рецепт.
   const mwrap=el("div","sy-mods");
   const head=el("div","sy-modhead");
   head.appendChild(el("div","sy-h",i18n("Модули корабля")+" · "+sy.modules.length+" "+i18n("шт")));

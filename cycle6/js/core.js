@@ -221,6 +221,7 @@ const EN = {
   "плитка":"tiles","таблица":"table","модуль":"module","система":"system","способность":"capability","ячейки":"cells","footprint":"footprint",
   "крепится к hardpoint (без ячеек корпуса)":"attaches to a hardpoint (no hull cells)","без ячеек":"no cells","открыть рецепт":"open recipe",
   "Форма базы":"Base shape","ячейки под модули (":"cells for modules (",
+  "без ячеек (движок/нос)":"no cells (engine/nose)","← выбери модуль слева, чтобы открыть его рецепт":"← pick a module on the left to open its recipe",
   "предметов: {n}":"items: {n}","Список пуст — открой предмет в каталоге и нажми «➕ В список».":"List is empty — open an item in the catalog and click «➕ Add to list».",
   "Очистить весь список крафта?":"Clear the whole craft list?",
   "Список: <b>{n} предметов</b> &nbsp;·&nbsp; ⛏ руда: <b>{ore} м³</b>":"List: <b>{n} items</b> &nbsp;·&nbsp; ⛏ ore: <b>{ore} m³</b>",

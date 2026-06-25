@@ -5,10 +5,14 @@ function showDetail(id, qtyOverride){
     const f = document.getElementById("qty");
     if(f && selected === id) qtyOverride = Math.max(1, parseInt(f.value)||1);
   }
-  selected = id; fitMode = false; listMode = false; cycle6Mode = false; updateListNav();
+  // если открыли наш модуль-конструктор — остаёмся в «Модульной постройке» (1-й сайдбар подсвечен,
+  // 2-й сайдбар = 16 модулей), иначе обычный режим каталога.
+  const inShipyard = (typeof isShipyardModule==="function") && isShipyardModule(id);
+  selected = id; fitMode = false; listMode = false; cycle6Mode = inShipyard; updateListNav();
   const wantHash = "#" + id + (qtyOverride > 1 ? ("x"+qtyOverride) : "");
   if(location.hash !== wantHash) location.hash = wantHash;   // ссылку можно скинуть другому игроку
-  syncSidebarTo(id);
+  if(inShipyard){ if(typeof renderCats==="function") renderCats(); if(typeof renderItems==="function") renderItems(); highlightItem(id); }
+  else syncSidebarTo(id);
   const t = ty(id);
   const d = $("#detail"); d.innerHTML = "";
 
