@@ -852,3 +852,7 @@ button:active{transform:translateY(1px)}
 .sy-tag.hp{background:#3a2a10;color:#e8c98a}
 .sy-card .cg.mod{flex:0 0 auto}
 .sy-craft{position:absolute;top:8px;right:8px;font-size:11px;color:#7ad9c2}
+/* устаревшая категория Ship в Цикле 6 — перечёркнута */
+.catrow.legacy .catname{text-decoration:line-through;opacity:.55}
+.catrow.legacy .catdot{opacity:.4}
+.catrow.legacy .catcnt{opacity:.45}

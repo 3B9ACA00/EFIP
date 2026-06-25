@@ -8,7 +8,8 @@ const CAT_COLOR = {
   Ship:"#ff6a3d", Module:"#8a96a8", Material:"#9aa861", Charge:"#e0a93a",
   Commodity:"#b189c4", Asteroid:"#c98a3a", Deployable:"#5fa99d", Blueprint:"#cf6b80", Unknown:"#8a8276",
 };
-const CAT_ORDER = ["Ship","Module","Charge","Material","Commodity","Asteroid","Deployable","Blueprint","Unknown"];
+// Цикл 6: кораблей-предметов нет (постройка модульная — см. «Верфь»); старые корабли скрыты
+const CAT_ORDER = ["Module","Charge","Material","Commodity","Asteroid","Deployable","Shell","Blueprint","Unknown"];
 const catRank = (c)=>{ const i = CAT_ORDER.indexOf(c); return i < 0 ? CAT_ORDER.length + 1 : i; };
 
 let DATA = null;
@@ -210,6 +211,12 @@ const EN = {
   "📋 Список":"📋 List","📋 Список крафта":"📋 Craft list","➕ В список":"➕ Add to list","✓ в списке":"✓ in list","Очистить всё":"Clear all",
   "Предмет":"Item","Не учитывать в крафте":"Exclude from craft","Учитывать в крафте":"Include in craft","Меньше":"Less","Больше":"More",
   "📋 Список крафтов":"📋 Craft List","Раздел Cycle 6 — скоро. Пока пусто.":"Cycle 6 section — coming soon. Empty for now.",
+  // раздел «Верфь» / конструктор (Цикл 6)
+  "Верфь — модульная постройка":"Shipyard — modular building","База":"Base","частей":"parts","предустановлено":"pre-installed",
+  "ячейка корпуса":"hull cell","модуль занимает несколько ячеек — должен влезть в форму базы":"a module occupies several cells — must fit the base shape",
+  "Форма базы #":"Base shape #","корпус из ":"hull of ","Модули":"Modules","часть":"part","ячеек":"cells","Рецепт":"Recipe",
+  "устарело в Цикле 6 — постройка теперь модульная (см. «Верфь»)":"deprecated in Cycle 6 — building is now modular (see Shipyard)",
+  "нет данных верфи":"no shipyard data",
   "предметов: {n}":"items: {n}","Список пуст — открой предмет в каталоге и нажми «➕ В список».":"List is empty — open an item in the catalog and click «➕ Add to list».",
   "Очистить весь список крафта?":"Clear the whole craft list?",
   "Список: <b>{n} предметов</b> &nbsp;·&nbsp; ⛏ руда: <b>{ore} м³</b>":"List: <b>{n} items</b> &nbsp;·&nbsp; ⛏ ore: <b>{ore} m³</b>",

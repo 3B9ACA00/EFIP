@@ -31,10 +31,8 @@ function enterList(raw){
 function updateListNav(){
   const a = document.getElementById("navlist");
   if(a){ const n = listCount(); a.textContent = i18n("📋 Список крафтов") + (n ? (" ("+n+")") : ""); a.classList.toggle("active", !!listMode); }
-  // циклы в шапке: Cycle 6 активен только в своём (пустом) разделе
-  const e5 = document.getElementById("navc5"), e6 = document.getElementById("navc6");
-  if(e5) e5.classList.toggle("active", !cycle6Mode);
-  if(e6) e6.classList.toggle("active", !!cycle6Mode);
+  // это приложение Цикла 6 — вкладка Cycle 6 всегда активна; Cycle 5 = архивная ссылка
+  const e6 = document.getElementById("navc6"); if(e6) e6.classList.add("active");
 }
 
 // ── мутации списка ──
@@ -144,14 +142,15 @@ function showCycle6(){
   updateListNav(); renderCrumbs();
 }
 // мини-сетка cells (footprint модуля / часть базы)
-function cellGrid(cells, cls){
+function cellGrid(cells, cls, sz){
+  sz=sz||6;
   const g=el("div","cg"+(cls?" "+cls:""));
   if(!cells||!cells.length) return g;
   const xs=cells.map(c=>c.x), ys=cells.map(c=>c.y);
   const minx=Math.min.apply(null,xs), miny=Math.min.apply(null,ys);
   const w=Math.max.apply(null,xs)-minx+1, h=Math.max.apply(null,ys)-miny+1;
-  g.style.gridTemplateColumns="repeat("+w+",6px)";
-  g.style.gridTemplateRows="repeat("+h+",6px)";
+  g.style.gridTemplateColumns="repeat("+w+","+sz+"px)";
+  g.style.gridTemplateRows="repeat("+h+","+sz+"px)";
   const on=new Set(cells.map(c=>(c.x-minx)+","+(c.y-miny)));
   for(let y=0;y<h;y++) for(let x=0;x<w;x++){
     const i=el("i","cgc"+(on.has(x+","+y)?" on":""));
@@ -177,9 +176,28 @@ function renderShipyard(d){
   meta.appendChild(el("span","sy-chip","hardpoints: "+hpAll));
   meta.appendChild(el("span","sy-chip",i18n("предустановлено")+": "+b.interior.length));
   bc.appendChild(meta);
-  const pmap=el("div","sy-parts");
-  b.parts.forEach(p=>{ const pc=el("div","sy-part"); pc.appendChild(cellGrid(p.cells,"part")); pmap.appendChild(pc); });
-  bc.appendChild(pmap);
+  // легенда: что такое квадратики
+  const leg=el("div","sy-legend");
+  leg.innerHTML='<span class="lg"><i class="lgc on"></i> '+i18n("ячейка корпуса")+'</span>'+
+                '<span class="lg">'+i18n("модуль занимает несколько ячеек — должен влезть в форму базы")+'</span>';
+  bc.appendChild(leg);
+  // силуэт базы: 11 частей собраны по мировым координатам (вид сверху: X×Z)
+  const cap=el("div","sy-cap"); cap.textContent=i18n("Форма базы #")+b.id+" — "+i18n("корпус из ")+b.parts.length+" "+i18n("частей")+":";
+  bc.appendChild(cap);
+  const wc=b.parts.filter(p=>p.cells&&p.cells.length&&p.pos);
+  const px=wc.map(p=>p.pos[0]), pz=wc.map(p=>p.pos[2]);
+  const minX=Math.min.apply(null,px),maxX=Math.max.apply(null,px),minZ=Math.min.apply(null,pz),maxZ=Math.max.apply(null,pz);
+  const hull=el("div","sy-hull");
+  wc.forEach(p=>{
+    const hp=el("div","sy-hpart");
+    const lx=(maxX-minX)?(p.pos[0]-minX)/(maxX-minX):.5;
+    const lz=(maxZ-minZ)?(p.pos[2]-minZ)/(maxZ-minZ):.5;
+    hp.style.left=(10+lx*80)+"%"; hp.style.top=(10+lz*80)+"%";
+    hp.title=i18n("часть")+" #"+p.pid+" · "+p.cells.length+" "+i18n("ячеек");
+    hp.appendChild(cellGrid(p.cells,"hull"));
+    hull.appendChild(hp);
+  });
+  bc.appendChild(hull);
   if(b.interior&&b.interior.length){
     const il=el("div","sy-interior");
     b.interior.forEach(i=>{ const ch=el("span","sy-ichip"); ch.appendChild(syIcon(i.id)); ch.appendChild(el("span","",i.name||("#"+i.id))); il.appendChild(ch); });

@@ -45,6 +45,22 @@ for bid, info in bpj.items():
         'rt':  info.get('runTime', 0),
         'prim': info.get('primaryTypeID'),
     })
+# постройки (Deployable) — рецепты из spacecomponentsbytype.json → assemblyConstruction
+# (строятся в base building, их НЕТ в industry_blueprints). recipe_type_id → constructedItem.
+spc = L('spacecomponentsbytype.json')
+n_dep = 0
+for tid_s, comps in spc.items():
+    ac = comps.get('assemblyConstruction') if isinstance(comps, dict) else None
+    if not isinstance(ac, dict):   # в билде 3409470 — непрозрачный placeholder (loader не отдаёт); пропускаем
+        continue
+    ci = ac.get('constructedItem')
+    inp = [{'id': int(k), 'q': q} for k, q in ac.get('inputItems', {}).items()]
+    if ci is None or not inp:
+        continue
+    recipes.append({'bp': int(tid_s), 'inp': inp, 'out': [{'id': int(ci), 'q': 1}],
+                    'rt': 0, 'prim': int(ci), 'build': 1})
+    n_dep += 1
+
 facj = L('industry_facilities.json')
 facilities = {}; bp2fac = {}
 for fid_s, fi in facj.items():
@@ -58,6 +74,19 @@ out2bp = {}                                # output type -> bp (рецепт м�
 for v in recipes:
     for o in v['out']:
         out2bp.setdefault(o['id'], v['bp'])
+
+# ---------- догма (характеристики для конструктора) ----------
+DOGMA = L('typeDogma.json')
+DA    = L('dogmaAttributes.json')
+AN    = {int(k): v.get('name') for k, v in DA.items() if v.get('name')}
+def stats_of(tid):
+    d = DOGMA.get(str(tid), {})
+    out = {}
+    for a in d.get('dogmaAttributes', []):
+        nm2 = AN.get(a['attributeID'])
+        if nm2 is not None and a.get('value') is not None:
+            out[nm2] = a['value']
+    return out
 
 # ---------- ВЕРФЬ (creation_*) ----------
 mods_j  = L('creation_modules.json')
@@ -79,7 +108,7 @@ for tid_s, m in mods_j.items():
     modules.append({
         'id': tid, 'name': nm(tid), 'cap': m.get('capability'), 'beh': m.get('behavior'),
         'sys': m.get('system'), 'hp': sorted(set(hp)), 'cells': cells, 'bbox': bbox(cells),
-        'bp': out2bp.get(tid),
+        'bp': out2bp.get(tid), 'stats': stats_of(tid),
     })
 
 base = None
@@ -96,8 +125,9 @@ for tid_s, t in tmpl_j.items():
         'fuel': {'id': t['fuel']['type_id'], 'name': nm(t['fuel']['type_id'])},
         'parts': parts,
         'interior': [{'id': im['type_id'], 'name': nm(im['type_id']), 'pid': im.get('part_id'),
-                      'pos': im.get('position'), 'hp': im.get('hardpoints', [])}
+                      'pos': im.get('position'), 'hp': im.get('hardpoints', []), 'stats': stats_of(im['type_id'])}
                      for im in t.get('interior_modules', [])],
+        'fuel_stats': stats_of(t['fuel']['type_id']),
     }
     break
 shipyard = {'base': base, 'modules': modules, 'hardpoints': hp_j}

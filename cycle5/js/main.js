@@ -133,7 +133,7 @@ async function boot(){
   // список крафта: бэкап из localStorage (для счётчика навигации); хеш #list перекроет в dispatch
   try{ craftList = (JSON.parse(localStorage.getItem("ef_craftlist")||"[]")||[]).filter((x)=> x && T[x.id]); }catch(e){}
   const nl = $("#navlist"); if(nl) nl.onclick = ()=>{ location.hash = "#"+listHash(); };
-  const c6b = $("#navc6"); if(c6b) c6b.onclick = ()=> showCycle6();
+  const c6b = $("#navc6"); if(c6b) c6b.onclick = ()=>{ location.href = "../cycle6/"; };  // переключение на раздел Цикла 6
   const c5b = $("#navc5"); if(c5b) c5b.onclick = ()=>{ const def=(selected!=null&&T[selected])?selected:(DATA.recipes.flatMap((r)=>r.out.map((o)=>o.id)).find((id)=>ty(id).cat==="Ship")); if(def) showDetail(def); };
   updateListNav();
   const ph = parseH();

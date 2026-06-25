@@ -4,7 +4,9 @@ function renderCats(){
   const host = $("#cats"); if(!host) return; host.innerHTML = "";
   const counts = {}; for(const t of DATA.types) counts[t.cat] = (counts[t.cat]||0)+1;
   Object.keys(counts).sort((a,b)=>catRank(a)-catRank(b)).forEach((c)=>{
-    const it = el("div","catrow"+(c===selectedCat?" sel":"")); it.dataset.cat = c;
+    const legacy = (c==="Ship");  // Цикл 6: корабли-предметы устарели (постройка модульная — см. «Верфь»)
+    const it = el("div","catrow"+(c===selectedCat?" sel":"")+(legacy?" legacy":"")); it.dataset.cat = c;
+    if(legacy) it.title = i18n("устарело в Цикле 6 — постройка теперь модульная (см. «Верфь»)");
     const dot = el("span","catdot"); dot.style.background = CAT_COLOR[c] || CAT_COLOR.Unknown;
     it.appendChild(dot);
     it.appendChild(el("span","catname", esc(c)));
