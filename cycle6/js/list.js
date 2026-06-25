@@ -170,9 +170,19 @@ function renderShipyard(d){
   wrap.appendChild(el("div","sy-title","🛠 "+i18n("Верфь — модульная постройка")));
 
   // === ФОРМА БАЗЫ (сетка корпуса) — СВЕРХУ ===
+  // РЕВЕРС раскладки: повороты частей нулевые → собираем по position. Вид сверху:
+  // горизонталь = pos.x (лево-право), вертикаль = pos.z (нос -z сверху, хвост +z снизу),
+  // ячейки части центрируются на её позиции (масштаб 1:1). cell_offset НЕ годится (мусор/overlap).
   if(sy.base && sy.base.parts){
-    const all=[];
-    sy.base.parts.forEach(p=>{ const o=p.off||{}; (p.cells||[]).forEach(cc=>all.push({x:cc.x+(o.x||0), y:cc.y+(o.y||0)})); });
+    const seen=new Set(), all=[];
+    sy.base.parts.forEach(p=>{
+      if(!p.cells||!p.cells.length||!p.pos) return;
+      const xs=p.cells.map(c=>c.x), ys=p.cells.map(c=>c.y);
+      const cxc=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2, cyc=(Math.min.apply(null,ys)+Math.max.apply(null,ys))/2;
+      const ox=p.pos[0], oy=p.pos[2];
+      p.cells.forEach(c=>{ const gx=Math.round(ox+(c.x-cxc)), gy=Math.round(oy+(c.y-cyc)), k=gx+","+gy;
+        if(!seen.has(k)){ seen.add(k); all.push({x:gx,y:gy}); } });
+    });
     if(all.length){
       const bg=el("div","sy-basegrid");
       bg.appendChild(el("div","sy-h",i18n("Форма базы")+" #"+sy.base.id+" — "+i18n("ячейки под модули (")+all.length+")"));
