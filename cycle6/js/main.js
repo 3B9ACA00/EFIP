@@ -3,6 +3,15 @@
 function renderCats(){
   const host = $("#cats"); if(!host) return; host.innerHTML = "";
   const counts = {}; for(const t of DATA.types) counts[t.cat] = (counts[t.cat]||0)+1;
+  // спец-раздел «Модульная постройка» (верфь) — ВСЕГДА ПЕРВЫЙ
+  if(DATA.shipyard && DATA.shipyard.modules){
+    const sy = el("div","catrow special"+(cycle6Mode?" sel":""));
+    const sd = el("span","catdot"); sd.style.background="#ff4700"; sy.appendChild(sd);
+    sy.appendChild(el("span","catname","🛠 "+i18n("Модульная постройка")));
+    sy.appendChild(el("span","catcnt", String(DATA.shipyard.modules.length)));
+    sy.onclick = ()=> showCycle6();
+    host.appendChild(sy);
+  }
   Object.keys(counts).sort((a,b)=>catRank(a)-catRank(b)).forEach((c)=>{
     const legacy = (c==="Ship");  // Цикл 6: корабли-предметы устарели (постройка модульная — см. «Верфь»)
     const it = el("div","catrow"+(c===selectedCat?" sel":"")+(legacy?" legacy":"")); it.dataset.cat = c;
@@ -78,7 +87,7 @@ function renderCrumbs(){
 
 // ── выбор категории / синхронизация сайдбара ────────
 function selectCat(c){
-  selectedCat = c;
+  selectedCat = c; cycle6Mode = false;   // выход из «Модульной постройки» при выборе обычной категории
   if($("#gsearch")) $("#gsearch").value = "";
   if($("#search"))  $("#search").value  = "";
   renderCats(); renderItems(); renderCrumbs();

@@ -841,17 +841,21 @@ button:active{transform:translateY(1px)}
 .sy-grp{margin-bottom:16px}
 .sy-sys{font-size:13px;font-weight:700;color:var(--accent);text-transform:capitalize;margin-bottom:8px;border-bottom:1px solid var(--line);padding-bottom:4px}
 .sy-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
-.sy-card{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);position:relative}
+.sy-card{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
 .sy-card:hover{border-color:#3a4a5a}
 .sy-card .sy-mi{width:40px;height:40px;flex:0 0 40px}
 .sy-info{flex:1;min-width:0}
+.sy-card .cg.mod{flex:0 0 auto;margin-left:auto}
 .sy-name{font-size:13px;font-weight:600;color:#dce8f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sy-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .sy-tag{font-size:10px;padding:1px 6px;border-radius:8px;background:#1b2129;color:var(--muted);white-space:nowrap}
 .sy-tag.cap{background:#1b3a52;color:#cfe6ff}
 .sy-tag.hp{background:#3a2a10;color:#e8c98a}
 .sy-card .cg.mod{flex:0 0 auto}
-.sy-craft{position:absolute;top:8px;right:8px;font-size:11px;color:#7ad9c2}
+.sy-craft{flex:0 0 auto;font-size:11px}
+/* спец-категория «Модульная постройка» — выделена, первая */
+.catrow.special{border-left:2px solid var(--accent);background:rgba(255,71,0,.06)}
+.catrow.special .catname{color:#ffb38a;font-weight:700}
 /* устаревшая категория Ship в Цикле 6 — перечёркнута */
 .catrow.legacy .catname{text-decoration:line-through;opacity:.55}
 .catrow.legacy .catdot{opacity:.4}

@@ -135,10 +135,11 @@ function showList(){
 
 // ── Cycle 6 — пустой раздел (заглушка) ──
 function showCycle6(){
-  listMode=false; cycle6Mode=true; selected=null; fitMode=false;
+  listMode=false; cycle6Mode=true; selected=null; fitMode=false; selectedCat=null;
   if(location.hash!=="#cycle6") history.replaceState(null,"","#cycle6");
   const d=$("#detail"); d.innerHTML="";
   renderShipyard(d);
+  if(typeof renderCats==="function") renderCats();
   updateListNav(); renderCrumbs();
 }
 // мини-сетка cells (footprint модуля / часть базы)
